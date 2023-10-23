@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="cordova-plugin-ionicrtmphls" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>IoniCordovaRTMPandHLS</name>
+    <js-module name="IoniCordovaRTMPandHLS" src="www/IoniCordovaRTMPandHLS.js">
+        <clobbers target="cordova.plugins.IoniCordovaRTMPandHLS" />
+    </js-module>
+    <platform name="android">
+        <dependency id="com.github.shogo4405:HaishinKit.kt" version="0.11.2" />
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="IoniCordovaRTMPandHLS"><param name="android-package" value="cordova-plugin-ionicrtmphls.IoniCordovaRTMPandHLS" /></feature>
+        </config-file>
+        <config-file parent="/*" target="AndroidManifest.xml" />
+        <source-file src="src/android/IoniCordovaRTMPandHLS.java" target-dir="src/cordova-plugin-ionicrtmphls/IoniCordovaRTMPandHLS" />
+    </platform>
+    <platform name="ios">
+        <dependency id="com.github.shogo4405:HaishinKit.swift" version="1.6.1" />
+        <config-file parent="/*" target="config.xml">
+            <feature name="IoniCordovaRTMPandHLS"><param name="ios-package" value="IoniCordovaRTMPandHLS" /></feature>
+        </config-file>
+        <source-file src="src/ios/IoniCordovaRTMPandHLS.m" />
+    </platform>
+</plugin>
