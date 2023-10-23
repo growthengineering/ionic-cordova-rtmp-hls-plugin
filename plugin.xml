@@ -11,6 +11,9 @@
         </config-file>
         <config-file parent="/*" target="AndroidManifest.xml" />
         <source-file src="src/android/IoniCordovaRTMPandHLS.java" target-dir="src/cordova-plugin-ionicrtmphls/IoniCordovaRTMPandHLS" />
+        <uses-permission android:name="android.permission.INTERNET" />
+        <uses-permission android:name="android.permission.CAMERA" />
+        <uses-permission android:name="android.permission.RECORD_AUDIO" />
     </platform>
     <platform name="ios">
         <dependency id="com.github.shogo4405:HaishinKit.swift" version="1.6.1" />

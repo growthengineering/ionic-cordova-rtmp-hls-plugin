@@ -11,6 +11,10 @@ import org.json.JSONObject;
  * This class echoes a string called from JavaScript.
  */
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
+    private RtmpConnection connection;
+    private RtmpStream stream;
+    private HkGLSurfaceView cameraView;
+    private CameraSource cameraSource;
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -40,6 +44,77 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         }
         return false;
     }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getActivity() != null) {
+            int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA);
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CAMERA}, 1);
+            }
+            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+            }
+        }
+        connection = new RtmpConnection();
+        stream = new RtmpStream(connection);
+        stream.attachAudio(new AudioRecordSource());
+        cameraSource = new CameraSource(requireContext());
+        cameraSource.open(CameraCharacteristics.LENS_FACING_BACK);
+        stream.attachVideo(cameraSource);
+        connection.addEventListener(Event.RTMP_STATUS, this);
+    }
+    
+    @RequiresPermission(allOf = {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO})
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View v = inflater.inflate(R.layout.fragment_camera, container, false);
+        Button button = v.findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (button.getText().equals("Publish")) {
+                    connection.connect(Preference.shared.rtmpURL);
+                    button.setText("Stop");
+                } else {
+                    connection.close();
+                    button.setText("Publish");
+                }
+            }
+        });
+        Button switchButton = v.findViewById(R.id.switch_button);
+        switchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cameraSource.switchCamera();
+            }
+        });
+        cameraView = v.findViewById(R.id.camera);
+        cameraView.attachStream(stream);
+        return v;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+     @Override
+    public void handleEvent(Event event) {
+        Log.i(TAG + "#handleEvent", event.toString());
+        Map<String, Object> data = EventUtils.toMap(event);
+        String code = data.get("code").toString();
+        if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.rawValue)) {
+            stream.publish(Preference.shared.streamName);
+        }
+    }
+
+    public static CameraTabFragment newInstance() {
+        return new CameraTabFragment();
+    }
+
+    private static final String TAG = CameraTabFragment.class.getSimpleName();
 
     private void coolMethod(String message, CallbackContext callbackContext) {
         if (message != null && message.length() > 0) {
