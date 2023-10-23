@@ -1,4 +1,4 @@
-package cordova-plugin-ionicrtmphls;
+package cordova.plugin.ionicrtmphls;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -21,6 +21,7 @@ import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import com.haishinkit.rtmp.*;
 
 /**
  * This class echoes a string called from JavaScript.
@@ -140,26 +141,26 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void previewCamera(CallbackContext callbackContext) {
-        callbackContext.success('previewCamera Executed!');
+        callbackContext.success("previewCamera Executed!");
     }
 
     private void swapCamera(CallbackContext callbackContext) {
-        callbackContext.success('swapCamera Executed!');
+        callbackContext.success("swapCamera Executed!");
     }
 
     private void startBroadcasting(CallbackContext callbackContext) {
-        callbackContext.success('startBroadcasting Executed!');
+        callbackContext.success("startBroadcasting Executed!");
     }
 
     private void stopBroadcasting(CallbackContext callbackContext) {
-        callbackContext.success('stopBroadcasting Executed!');
+        callbackContext.success("stopBroadcasting Executed!");
     }
 
     private void viewLiveStream(CallbackContext callbackContext) {
-        callbackContext.success('viewLiveStream Executed!');
+        callbackContext.success("viewLiveStream Executed!");
     }
 
     private void requestPermissions(CallbackContext callbackContext) {
-        callbackContext.success('requestPermissions Executed!');
+        callbackContext.success("requestPermissions Executed!");
     }
 }

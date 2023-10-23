@@ -1,23 +1,34 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugin id="cordova-plugin-ionicrtmphls" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>IoniCordovaRTMPandHLS</name>
+
     <js-module name="IoniCordovaRTMPandHLS" src="www/IoniCordovaRTMPandHLS.js">
         <clobbers target="cordova.plugins.IoniCordovaRTMPandHLS" />
     </js-module>
+
     <platform name="android">
         <config-file parent="/*" target="res/xml/config.xml">
             <feature name="IoniCordovaRTMPandHLS"><param name="android-package" value="cordova-plugin-ionicrtmphls.IoniCordovaRTMPandHLS" /></feature>
         </config-file>
-        <config-file parent="/*" target="AndroidManifest.xml" />
+        
+        <config-file parent="/manifest" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+        </config-file>
+
+        <framework src="src/android/build.gradle" custom="true" type="gradleReference" />
+        
         <source-file src="src/android/IoniCordovaRTMPandHLS.java" target-dir="src/cordova-plugin-ionicrtmphls/IoniCordovaRTMPandHLS" />
-        <uses-permission android:name="android.permission.INTERNET" />
-        <uses-permission android:name="android.permission.CAMERA" />
-        <uses-permission android:name="android.permission.RECORD_AUDIO" />
     </platform>
+
     <platform name="ios">
         <config-file parent="/*" target="config.xml">
-            <feature name="IoniCordovaRTMPandHLS"><param name="ios-package" value="IoniCordovaRTMPandHLS" /></feature>
+            <feature name="IoniCordovaRTMPandHLS">
+                <param name="ios-package" value="IoniCordovaRTMPandHLS" />
+            </feature>
         </config-file>
+
         <source-file src="src/ios/IoniCordovaRTMPandHLS.m" />
     </platform>
 </plugin>
