@@ -14,10 +14,29 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        if (action.equals("coolMethod")) {
-            String message = args.getString(0);
-            this.coolMethod(message, callbackContext);
-            return true;
+        switch(action) {
+            case "coolMethod":
+                String message = args.getString(0);
+                this.coolMethod(message, callbackContext);
+                return true;
+            case "previewCamera":
+                this.previewCamera(callbackContext);
+                return true;
+            case "swapCamera":
+                this.swapCamera(callbackContext);
+                return true;
+            case "startBroadcasting":
+                this.startBroadcasting(callbackContext);
+                return true;
+            case "stopBroadcasting":
+                this.stopBroadcasting(callbackContext);
+                return true;
+            case "viewLiveStream":
+                this.viewLiveStream(callbackContext);
+                return true;
+            case "requestPermissions":
+                this.requestPermissions(callbackContext);
+                return true;
         }
         return false;
     }
@@ -28,5 +47,29 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         } else {
             callbackContext.error("Expected one non-empty string argument.");
         }
+    }
+
+    private void previewCamera(CallbackContext callbackContext) {
+        callbackContext.success('previewCamera Executed!');
+    }
+
+    private void swapCamera(CallbackContext callbackContext) {
+        callbackContext.success('swapCamera Executed!');
+    }
+
+    private void startBroadcasting(CallbackContext callbackContext) {
+        callbackContext.success('startBroadcasting Executed!');
+    }
+
+    private void stopBroadcasting(CallbackContext callbackContext) {
+        callbackContext.success('stopBroadcasting Executed!');
+    }
+
+    private void viewLiveStream(CallbackContext callbackContext) {
+        callbackContext.success('viewLiveStream Executed!');
+    }
+
+    private void requestPermissions(CallbackContext callbackContext) {
+        callbackContext.success('requestPermissions Executed!');
     }
 }
