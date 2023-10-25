@@ -1,31 +1,33 @@
 var exec = require('cordova/exec');
 
-exports.coolMethod = function (arg0, success, error) {
+var IoniCordovaRTMPandHLS = {};
+
+IoniCordovaRTMPandHLS.coolMethod = function (arg0, success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'coolMethod', [arg0]);
 };
 
-exports.previewCamera = function (success, error) {
+IoniCordovaRTMPandHLS.previewCamera = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'previewCamera', []);
 };
 
-exports.swapCamera = function (success, error) {
+IoniCordovaRTMPandHLS.swapCamera = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'swapCamera', []);
 };
 
-exports.startBroadcasting = function (success, error) {
+IoniCordovaRTMPandHLS.startBroadcasting = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'startBroadcasting', []);
 };
 
-exports.stopBroadcasting = function (success, error) {
+IoniCordovaRTMPandHLS.stopBroadcasting = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'stopBroadcasting', []);
 };
 
-exports.viewLiveStream = function (success, error) {
+IoniCordovaRTMPandHLS.viewLiveStream = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'viewLiveStream', []);
 };
 
-exports.requestPermissions = function (success, error) {
+IoniCordovaRTMPandHLS.requestPermissions = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'requestPermissions', []);
 };
 
-
+module.exports = IoniCordovaRTMPandHLS;
