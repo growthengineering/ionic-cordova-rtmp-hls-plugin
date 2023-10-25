@@ -145,18 +145,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void swapCamera(CallbackContext callbackContext) {
-      /*  if (cameraSource != null) {
-            try {
-
-                cameraSource.getCameraFacing();
-
-                callbackContext.success("Camera swapped!");
-            } catch (Exception e) {
-                callbackContext.error("Error while swapping camera: " + e.getMessage());
-            }
-        } else {
-            callbackContext.error("Camera source not initialized.");
-        } */
         callbackContext.success("swapCamera Executed!");
     }
 
@@ -173,12 +161,23 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void requestPermissions(CallbackContext callbackContext) {
-        int permissionCheck = ContextCompat.checkSelfPermission( cordova.getActivity(), Manifest.permission.CAMERA);
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions( cordova.getActivity(), new String[]{Manifest.permission.CAMERA}, 1);
+        String[] permissions = {
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO
+        };
+
+        // Check if permissions are granted
+        boolean hasPermissions = true;
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(cordova.getActivity(), permission) != PackageManager.PERMISSION_GRANTED) {
+                hasPermissions = false;
+                break;
+            }
         }
-        if (ContextCompat.checkSelfPermission( cordova.getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions( cordova.getActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+
+        // Request permissions if not granted
+        if (!hasPermissions) {
+            cordova.requestPermissions(this, 1, permissions);
         }
         callbackContext.success("requestPermissions Executed!");
     }
