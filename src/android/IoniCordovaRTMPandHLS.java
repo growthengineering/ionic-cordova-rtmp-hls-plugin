@@ -21,16 +21,22 @@ import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+/*
+import com.haishinkit.event.Event;
 import com.haishinkit.rtmp.*;
+import com.haishinkit.view.HkSurfaceView;
+import com.haishinkit.media.Camera2Source;
+import com.haishinkit.*;
+/*
 
 /**
  * This class echoes a string called from JavaScript.
  */
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
-    private RtmpConnection connection;
+   /* private RtmpConnection connection;
     private RtmpStream stream;
-    private HkGLSurfaceView cameraView;
-    private CameraSource cameraSource;
+    private HkSurfaceView cameraView;
+    private Camera2Source cameraSource;
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -125,13 +131,13 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             stream.publish(Preference.shared.streamName);
         }
     }
-
+/*
     public static CameraTabFragment newInstance() {
         return new CameraTabFragment();
     }
 
     private static final String TAG = CameraTabFragment.class.getSimpleName();
-
+*/
     private void coolMethod(String message, CallbackContext callbackContext) {
         if (message != null && message.length() > 0) {
             callbackContext.success(message);

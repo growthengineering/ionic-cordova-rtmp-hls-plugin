@@ -5,5 +5,5 @@ allprojects {
 }
 
 dependencies {
-  implementation 'com.github.shogo4405.HaishinKit~kt:haishinkit:0.11.2'
+  implementation 'com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4'
 }
