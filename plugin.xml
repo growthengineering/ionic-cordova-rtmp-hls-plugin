@@ -3,7 +3,7 @@
     <name>IoniCordovaRTMPandHLS</name>
 
     <js-module name="IoniCordovaRTMPandHLS" src="www/IoniCordovaRTMPandHLS.js">
-        <clobbers target="cordova.plugins.IoniCordovaRTMPandHLS" />
+        <clobbers target="IoniCordovaRTMPandHLS" />
     </js-module>
 
     <platform name="android">
