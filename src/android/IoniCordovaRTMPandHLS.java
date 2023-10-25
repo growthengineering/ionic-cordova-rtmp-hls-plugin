@@ -1,42 +1,72 @@
 package cordova.plugin.ionicrtmphls;
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.pm.PackageManager;
+import android.hardware.camera2.CameraCharacteristics;
+import android.os.Bundle;
+import android.view.Display;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.RelativeLayout;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-/*
+
+import com.bambuser.broadcaster.SurfaceViewWithAutoAR;
+
 import com.haishinkit.event.Event;
-import com.haishinkit.rtmp.*;
-import com.haishinkit.view.HkSurfaceView;
+import com.haishinkit.event.IEventListener;
+import com.haishinkit.media.AudioRecordSource;
 import com.haishinkit.media.Camera2Source;
-import com.haishinkit.*;
-/*
+import com.haishinkit.rtmp.RtmpConnection;
+import com.haishinkit.rtmp.RtmpStream;
+import com.haishinkit.view.HkSurfaceView;
+
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 /**
  * This class echoes a string called from JavaScript.
  */
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
-   /* private RtmpConnection connection;
+    private RtmpConnection connection;
     private RtmpStream stream;
     private HkSurfaceView cameraView;
-    private Camera2Source cameraSource;
+    //private CameraSource cameraSource;
+    private CordovaWebView webView;
+    private CordovaInterface cordova;
+    private SurfaceViewWithAutoAR playbackSurfaceView;
+    private SurfaceViewWithAutoAR previewSurfaceView;
+    private Display mDefaultDisplay;
+
+    @Override
+    public void initialize(final CordovaInterface _cordova, final CordovaWebView _webView) {
+        super.initialize(cordova, webView);
+        webView = _webView;
+        cordova = _cordova;
+    }
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -67,77 +97,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         return false;
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getActivity() != null) {
-            int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA);
-            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CAMERA}, 1);
-            }
-            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 1);
-            }
-        }
-        connection = new RtmpConnection();
-        stream = new RtmpStream(connection);
-        stream.attachAudio(new AudioRecordSource());
-        cameraSource = new CameraSource(requireContext());
-        cameraSource.open(CameraCharacteristics.LENS_FACING_BACK);
-        stream.attachVideo(cameraSource);
-        connection.addEventListener(Event.RTMP_STATUS, this);
-    }
-    
-    @RequiresPermission(allOf = {Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO})
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_camera, container, false);
-        Button button = v.findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (button.getText().equals("Publish")) {
-                    connection.connect(Preference.shared.rtmpURL);
-                    button.setText("Stop");
-                } else {
-                    connection.close();
-                    button.setText("Publish");
-                }
-            }
-        });
-        Button switchButton = v.findViewById(R.id.switch_button);
-        switchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                cameraSource.switchCamera();
-            }
-        });
-        cameraView = v.findViewById(R.id.camera);
-        cameraView.attachStream(stream);
-        return v;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-     @Override
-    public void handleEvent(Event event) {
-        Log.i(TAG + "#handleEvent", event.toString());
-        Map<String, Object> data = EventUtils.toMap(event);
-        String code = data.get("code").toString();
-        if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.rawValue)) {
-            stream.publish(Preference.shared.streamName);
-        }
-    }
-/*
-    public static CameraTabFragment newInstance() {
-        return new CameraTabFragment();
-    }
-
-    private static final String TAG = CameraTabFragment.class.getSimpleName();
-*/
     private void coolMethod(String message, CallbackContext callbackContext) {
         if (message != null && message.length() > 0) {
             callbackContext.success(message);
@@ -147,10 +106,57 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void previewCamera(CallbackContext callbackContext) {
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Ensure you have the necessary permissions
+                requestPermissions(callbackContext);
+
+                // Initialize RTMP connection and stream
+                RtmpConnection connection = new RtmpConnection();
+                RtmpStream stream = new RtmpStream(connection);
+
+                Context context = cordova.getActivity().getApplicationContext();
+
+                // Attach audio and video sources
+                stream.attachAudio(new AudioRecordSource(context, true));
+                Camera2Source cameraSource = new Camera2Source(context, true);
+                cameraSource.open(CameraCharacteristics.LENS_FACING_BACK);
+                stream.attachVideo(cameraSource);
+
+                HkSurfaceView cameraView = new HkSurfaceView(cordova.getActivity());
+                cameraView.attachStream(stream);
+
+                ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                );
+                cameraView.setLayoutParams(layoutParams);
+
+                // Add the camera view to your Cordova WebView
+                cordova.getActivity().addContentView(cameraView, layoutParams);
+
+
+                // Optionally, return success to the JavaScript side
+                callbackContext.success("Camera preview started!");
+            }
+        });
         callbackContext.success("previewCamera Executed!");
     }
 
     private void swapCamera(CallbackContext callbackContext) {
+      /*  if (cameraSource != null) {
+            try {
+
+                cameraSource.getCameraFacing();
+
+                callbackContext.success("Camera swapped!");
+            } catch (Exception e) {
+                callbackContext.error("Error while swapping camera: " + e.getMessage());
+            }
+        } else {
+            callbackContext.error("Camera source not initialized.");
+        } */
         callbackContext.success("swapCamera Executed!");
     }
 
@@ -167,6 +173,13 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void requestPermissions(CallbackContext callbackContext) {
+        int permissionCheck = ContextCompat.checkSelfPermission( cordova.getActivity(), Manifest.permission.CAMERA);
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions( cordova.getActivity(), new String[]{Manifest.permission.CAMERA}, 1);
+        }
+        if (ContextCompat.checkSelfPermission( cordova.getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions( cordova.getActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+        }
         callbackContext.success("requestPermissions Executed!");
     }
 }
