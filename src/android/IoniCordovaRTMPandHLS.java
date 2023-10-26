@@ -128,22 +128,19 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 cameraView.attachStream(stream);
 
                 ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-                        300,
-                        300
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
                 );
                 cameraView.setLayoutParams(layoutParams);
-
-                // Set the position of the cameraView
-                cameraView.setX(100);
-                cameraView.setY(100);
+                
 
                 cameraSource.open(currentCameraFacing);
-                
+
                 ViewGroup parentView = (ViewGroup) webView.getView().getParent();
                 if (parentView instanceof FrameLayout) {
                     FrameLayout frameLayout = (FrameLayout) parentView;
-                    frameLayout.addView(cameraView, layoutParams);
-                    frameLayout.bringChildToFront(cameraView);
+                    frameLayout.addView(cameraView, 0);  // add cameraView at the bottom
+                    webView.getView().bringToFront();  // bring webView to the front
                 } else {
                     // If the parent view is not a FrameLayout, just add the cameraView directly to the activity
                     cordova.getActivity().addContentView(cameraView, layoutParams);
