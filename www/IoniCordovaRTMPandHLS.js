@@ -6,8 +6,8 @@ IoniCordovaRTMPandHLS.coolMethod = function (arg0, success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'coolMethod', [arg0]);
 };
 
-IoniCordovaRTMPandHLS.previewCamera = function (success, error) {
-    exec(success, error, 'IoniCordovaRTMPandHLS', 'previewCamera', []);
+IoniCordovaRTMPandHLS.previewCamera = function (elmClientRect, success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'previewCamera', [elmClientRect.left, elmClientRect.top, elmClientRect.width, elmClientRect.height]);
 };
 
 IoniCordovaRTMPandHLS.swapCamera = function (success, error) {

@@ -57,13 +57,11 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
     private RtmpStream stream;
-    private HkSurfaceView cameraView;
-    //private CameraSource cameraSource;
+    //private HkSurfaceView cameraView;
+    private Camera2Source cameraSource;
     private CordovaWebView webView;
     private CordovaInterface cordova;
-    private SurfaceViewWithAutoAR playbackSurfaceView;
-    private SurfaceViewWithAutoAR previewSurfaceView;
-    private Display mDefaultDisplay;
+    private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;  // Default to back-facing camera
 
     @Override
     public void initialize(final CordovaInterface _cordova, final CordovaWebView _webView) {
@@ -80,7 +78,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 this.coolMethod(message, callbackContext);
                 return true;
             case "previewCamera":
-                this.previewCamera(callbackContext);
+                this.previewCamera(args.getInt(0), args.getInt(1), args.getInt(2), args.getInt(3), callbackContext);
                 return true;
             case "swapCamera":
                 this.swapCamera(callbackContext);
@@ -109,62 +107,51 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         }
     }
 
-    private void previewCamera(CallbackContext callbackContext) {
-        Context context = cordova.getActivity().getApplicationContext();
-        Toast.makeText(context, "previewCamera", Toast.LENGTH_SHORT).show();
+    private void previewCamera(int left, int top, int width, int height, CallbackContext callbackContext) {
         cordova.getActivity().runOnUiThread(new Runnable() {
             @SuppressLint("ResourceAsColor")
             @Override
             public void run() {
-                Toast.makeText(context, "1 Permissions", Toast.LENGTH_SHORT).show();
-                // Ensure you have the necessary permissions
-                requestPermissions(callbackContext);
-
-                Toast.makeText(context, "2 After Permissions", Toast.LENGTH_SHORT).show();
+                Context context = cordova.getActivity().getApplicationContext();
+                Toast.makeText(context, "previewCamera", Toast.LENGTH_SHORT).show();
 
                 // Initialize RTMP connection and stream
-
-               // RtmpConnection connection = new RtmpConnection();
-               // RtmpStream stream = new RtmpStream(connection);
-
-
+                connection = new RtmpConnection();
+                stream = new RtmpStream(connection);
 
                 // Attach audio and video sources
-               // stream.attachAudio(new AudioRecordSource(context, true));
-                Camera2Source cameraSource = new Camera2Source(context, true);
-                cameraSource.open(CameraCharacteristics.LENS_FACING_BACK);
-             //   stream.attachVideo(cameraSource);
-                Toast.makeText(context, "3 ", Toast.LENGTH_SHORT).show();
+                stream.attachAudio(new AudioRecordSource(context, true));
+                cameraSource = new Camera2Source(context, true);
+                stream.attachVideo(cameraSource);
+
                 HkSurfaceView cameraView = new HkSurfaceView(cordova.getActivity());
-              //  cameraView.attachStream(stream);
-                Toast.makeText(context, "4 ", Toast.LENGTH_SHORT).show();
+                cameraView.attachStream(stream);
+
                 ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
+                        300,
+                        300
                 );
                 cameraView.setLayoutParams(layoutParams);
-                Toast.makeText(context, "5 ", Toast.LENGTH_SHORT).show();
+
+                // Set the position of the cameraView
+                cameraView.setX(100);
+                cameraView.setY(100);
+
+                cameraSource.open(currentCameraFacing);
+                
                 ViewGroup parentView = (ViewGroup) webView.getView().getParent();
                 if (parentView instanceof FrameLayout) {
-                    Toast.makeText(context, "5.1 ", Toast.LENGTH_SHORT).show();
                     FrameLayout frameLayout = (FrameLayout) parentView;
                     frameLayout.addView(cameraView, layoutParams);
                     frameLayout.bringChildToFront(cameraView);
                 } else {
-                    Toast.makeText(context, "5.2 ", Toast.LENGTH_SHORT).show();
                     // If the parent view is not a FrameLayout, just add the cameraView directly to the activity
                     cordova.getActivity().addContentView(cameraView, layoutParams);
+                    cameraView.bringToFront();
                 }
-                Toast.makeText(context, "6 ", Toast.LENGTH_SHORT).show();
+
                 // Add the camera view to your Cordova WebView
                 webView.getView().setBackgroundColor(Color.TRANSPARENT);
-                cameraView.bringToFront();
-                Toast.makeText(context, "7 ", Toast.LENGTH_SHORT).show();
-                cameraView.setTranslationZ(1.0f);
-                cameraView.setVisibility(View.VISIBLE);
-                webView.getView().setTranslationZ(-1.0f);
-                Toast.makeText(context, "8 ", Toast.LENGTH_SHORT).show();
-                // Optionally, return success to the JavaScript side
                 callbackContext.success("Camera preview started!");
             }
         });
@@ -172,6 +159,21 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void swapCamera(CallbackContext callbackContext) {
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                cameraSource.close();
+
+                // Toggle the current camera facing direction
+                currentCameraFacing = (currentCameraFacing == CameraCharacteristics.LENS_FACING_BACK)
+                        ? CameraCharacteristics.LENS_FACING_FRONT
+                        : CameraCharacteristics.LENS_FACING_BACK;
+
+                // Open the new camera
+                cameraSource.open(currentCameraFacing);
+
+            }
+        });
         callbackContext.success("swapCamera Executed!");
     }
 
