@@ -1,20 +1,38 @@
 <?xml version='1.0' encoding='utf-8'?>
 <plugin id="cordova-plugin-ionicrtmphls" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>IoniCordovaRTMPandHLS</name>
-    <js-module name="IoniCordovaRTMPandHLS" src="www/IoniCordovaRTMPandHLS.js">
-        <clobbers target="IoniCordovaRTMPandHLS" />
+
+    <js-module name="ionicrtmphls" src="www/IoniCordovaRTMPandHLS.js">
+        <clobbers target="cordova.plugin.ionicrtmphls" />
     </js-module>
+
     <platform name="android">
-        <config-file parent="/*" target="res/xml/config.xml">
-            <feature name="IoniCordovaRTMPandHLS"><param name="android-package" value="cordova-plugin-ionicrtmphls.IoniCordovaRTMPandHLS" /></feature>
+        <source-file src="src/android/IoniCordovaRTMPandHLS.java" target-dir="src/cordova/plugin/ionicrtmphls/" />
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="IoniCordovaRTMPandHLS">
+                <param name="android-package" value="cordova.plugin.ionicrtmphls.IoniCordovaRTMPandHLS" />
+            </feature>
         </config-file>
-        <config-file parent="/*" target="AndroidManifest.xml" />
-        <source-file src="src/android/IoniCordovaRTMPandHLS.java" target-dir="src/cordova-plugin-ionicrtmphls/IoniCordovaRTMPandHLS" />
+
+        <config-file parent="/manifest" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-feature android:name="android.hardware.camera" />
+        </config-file>
+
+        <framework src="com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4" />
+        <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
+
     </platform>
+
     <platform name="ios">
-        <config-file parent="/*" target="config.xml">
-            <feature name="IoniCordovaRTMPandHLS"><param name="ios-package" value="IoniCordovaRTMPandHLS" /></feature>
+        <config-file parent="/" target="config.xml">
+            <feature name="IoniCordovaRTMPandHLS">
+                <param name="ios-package" value="IoniCordovaRTMPandHLS" />
+            </feature>
         </config-file>
+
         <source-file src="src/ios/IoniCordovaRTMPandHLS.m" />
     </platform>
 </plugin>
