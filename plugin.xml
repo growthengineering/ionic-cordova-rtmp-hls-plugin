@@ -22,7 +22,7 @@
         </config-file>
 
         <framework src="com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4" />
-        <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
+      <!--  <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />-->
 
     </platform>
 
@@ -33,6 +33,16 @@
             </feature>
         </config-file>
 
+        <framework src="com.github.shogo4405.HaishinKit~swift:haishinkit:1.6.1" />
         <source-file src="src/ios/IoniCordovaRTMPandHLS.m" />
+
+        <preference name="CAMERA_USAGE_DESCRIPTION" default="Access camera to stream live" />
+        <config-file parent="NSCameraUsageDescription" target="*-Info.plist">
+            <string>$CAMERA_USAGE_DESCRIPTION</string>
+        </config-file>
+        <preference name="MIC_USAGE_DESCRIPTION" default="Access microphone to stream live" />
+        <config-file parent="NSMicrophoneUsageDescription" target="*-Info.plist">
+            <string>MIC_USAGE_DESCRIPTION</string>
+        </config-file>
     </platform>
 </plugin>
