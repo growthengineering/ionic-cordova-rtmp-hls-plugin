@@ -1,19 +1,7 @@
 /********* IoniCordovaRTMPandHLS.m Cordova Plugin Implementation *******/
+#import <AVFoundation/AVFoundation.h>
+#import "IoniCordovaRTMPandHLS.h"
 
-#import <Cordova/CDV.h>
-
-@interface IoniCordovaRTMPandHLS : CDVPlugin {
-  // Member variables go here.
-}
-
-- (void)coolMethod:(CDVInvokedUrlCommand*)command;
-- (void)previewCamera:(CDVInvokedUrlCommand*)command;
-- (void)swapCamera:(CDVInvokedUrlCommand*)command;
-- (void)startBroadcasting:(CDVInvokedUrlCommand*)command;
-- (void)stopBroadcasting:(CDVInvokedUrlCommand*)command;
-- (void)viewLiveStream:(CDVInvokedUrlCommand*)command;
-- (void)requestPermissions:(CDVInvokedUrlCommand*)command;
-@end
 
 @implementation IoniCordovaRTMPandHLS
 
@@ -33,7 +21,40 @@
 
 - (void)previewCamera:(CDVInvokedUrlCommand*)command
 {
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"previewCamera Executed!"];
+    /*
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // Assuming you have a property for the RTMP connection and stream
+        self.connection = [[RtmpConnection alloc] init];
+        self.stream = [[RtmpStream alloc] initWithConnection:self.connection];
+
+        // Attach audio and video sources
+        // These classes and methods are assumed based on your Java code
+        AudioRecordSource audioSource = [[AudioRecordSource alloc] initWithContext:self command:command];
+        [self.stream attachAudio:audioSource];
+
+        Camera2SourcecameraSource = [[Camera2Source alloc] initWithContext:self command:command];
+        [self.stream attachVideo:cameraSource];
+
+        HkSurfaceView cameraView = [[HkSurfaceView alloc] initWithContext:self command:command];
+        [cameraView attachStream:self.stream];
+
+        // Set layout parameters
+        // This is a simplified example, you'll need to set the actual parameters based on your app's layout
+        cameraView.frame = CGRectMake(0, 0, self.webView.frame.size.width, self.webView.frame.size.height);
+
+        // Add the camera view to the Cordova WebView
+        [self.webView addSubview:cameraView];
+
+        // Set the background color of the WebView to transparent
+        [self.webView setBackgroundColor:[UIColor clearColor]];
+
+        // Create a success result
+        CDVPluginResultpluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"Camera preview started!"];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    });
+
+   */
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"previewCamera Executed!"];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 

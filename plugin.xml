@@ -27,7 +27,7 @@
     </platform>
 
     <platform name="ios">
-        <config-file parent="/" target="config.xml">
+        <config-file parent="/*" target="config.xml">
             <feature name="IoniCordovaRTMPandHLS">
                 <param name="ios-package" value="IoniCordovaRTMPandHLS" />
             </feature>
@@ -35,10 +35,11 @@
 
         <framework src="com.github.shogo4405.HaishinKit~swift:haishinkit:1.6.1" />
         <source-file src="src/ios/IoniCordovaRTMPandHLS.m" />
+        <header-file src="src/ios/IoniCordovaRTMPandHLS.h" />
 
         <preference name="CAMERA_USAGE_DESCRIPTION" default="Access camera to stream live" />
         <config-file parent="NSCameraUsageDescription" target="*-Info.plist">
-            <string>$CAMERA_USAGE_DESCRIPTION</string>
+            <string>CAMERA_USAGE_DESCRIPTION</string>
         </config-file>
         <preference name="MIC_USAGE_DESCRIPTION" default="Access microphone to stream live" />
         <config-file parent="NSMicrophoneUsageDescription" target="*-Info.plist">
