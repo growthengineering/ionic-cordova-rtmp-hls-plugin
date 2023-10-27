@@ -32,11 +32,12 @@
                 <param name="ios-package" value="IoniCordovaRTMPandHLS" />
             </feature>
         </config-file>
-
-        <framework src="com.github.shogo4405.HaishinKit~swift:haishinkit:1.6.1" />
-        <source-file src="src/ios/IoniCordovaRTMPandHLS.m" />
-        <header-file src="src/ios/IoniCordovaRTMPandHLS.h" />
-
+        
+        <framework src="HaishinKit" type="podspec" spec="~> 1.5.6" />
+ 
+        <source-file src="src/ios/IoniCordovaRTMPandHLS.swift" />
+        <!-- <bridge-header src="src/ios/IoniCordovaRTMPandHLS-Bridging-Header.h" />  -->
+        
         <preference name="CAMERA_USAGE_DESCRIPTION" default="Access camera to stream live" />
         <config-file parent="NSCameraUsageDescription" target="*-Info.plist">
             <string>CAMERA_USAGE_DESCRIPTION</string>

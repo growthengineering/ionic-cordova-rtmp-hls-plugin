@@ -1,8 +1,12 @@
 #import <Cordova/CDV.h>
+#import <HaishinKit/HaishinKit.h>
 
-@interface IoniCordovaRTMPandHLS : CDVPlugin {
-  // Member variables go here.
-}
+@interface IoniCordovaRTMPandHLS : CDVPlugin
+
+@property (nonatomic, strong) RtmpConnection *connection;
+@property (nonatomic, strong) RtmpStream *stream;
+
+  
 
 - (void)coolMethod:(CDVInvokedUrlCommand*)command;
 - (void)previewCamera:(CDVInvokedUrlCommand*)command;
