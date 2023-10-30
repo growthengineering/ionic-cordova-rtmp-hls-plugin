@@ -8,6 +8,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.camera2.CameraCharacteristics;
 import android.os.Bundle;
+import android.util.Log;
+import android.util.Size;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,6 +35,7 @@ import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -42,19 +45,26 @@ import androidx.core.content.ContextCompat;
 import com.bambuser.broadcaster.SurfaceViewWithAutoAR;
 
 import com.haishinkit.event.Event;
+import com.haishinkit.event.EventUtils;
 import com.haishinkit.event.IEventListener;
+import com.haishinkit.graphics.VideoGravity;
 import com.haishinkit.media.AudioRecordSource;
 import com.haishinkit.media.Camera2Source;
 import com.haishinkit.rtmp.RtmpConnection;
 import com.haishinkit.rtmp.RtmpStream;
 import com.haishinkit.view.HkSurfaceView;
+import com.haishinkit.event.Event;
+import com.haishinkit.event.IEventListener;
+import com.haishinkit.rtmp.RtmpStream;
 
+import java.util.Map;
+import android.os.Handler;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 /**
  * This class echoes a string called from JavaScript.
  */
-public class IoniCordovaRTMPandHLS extends CordovaPlugin {
+public class IoniCordovaRTMPandHLS extends CordovaPlugin  {
     private RtmpConnection connection;
     private RtmpStream stream;
     //private HkSurfaceView cameraView;
@@ -117,11 +127,25 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
                 // Initialize RTMP connection and stream
                 connection = new RtmpConnection();
+                connection.setTimeout(100000);
                 stream = new RtmpStream(connection);
 
-                // Attach audio and video sources
+                // Video Settings
+                stream.getVideoSetting().setWidth(360);
+                stream.getVideoSetting().setHeight(640);
+                stream.getVideoSetting().setBitRate(160 * 1000);
+                stream.getVideoSetting().setIFrameInterval(2);
+                VideoGravity videoGravity = VideoGravity.RESIZE_ASPECT_FILL;
+                stream.getVideoSetting().setVideoGravity(videoGravity);
+
+                // Audio Settings
+                stream.getAudioSetting().setBitRate(32 * 1000);
                 stream.attachAudio(new AudioRecordSource(context, true));
+
+                // Camera Settings
                 cameraSource = new Camera2Source(context, true);
+                cameraSource.setResolution(new Size(360, 640));
+
                 stream.attachVideo(cameraSource);
 
                 HkSurfaceView cameraView = new HkSurfaceView(cordova.getActivity());
@@ -132,7 +156,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                         ViewGroup.LayoutParams.MATCH_PARENT
                 );
                 cameraView.setLayoutParams(layoutParams);
-                
 
                 cameraSource.open(currentCameraFacing);
 
@@ -152,7 +175,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 callbackContext.success("Camera preview started!");
             }
         });
-        callbackContext.success("previewCamera Executed!");
     }
 
     private void swapCamera(CallbackContext callbackContext) {
@@ -175,11 +197,42 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void startBroadcasting(CallbackContext callbackContext) {
-        callbackContext.success("startBroadcasting Executed!");
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Context context = cordova.getActivity().getApplicationContext();
+                connection.connect("rtmp://global-live.mux.com:5222/app/s3htJJ6chNfmod013kJQ00RxWpEGt3WLkxTM02abq2Vq1k");
+                //connection.connect("rtmps://23a62c6b8b63.global-contribute.live-video.net:443/app/sk_eu-west-1_33n8N7rfIbhg_6ZSZckjqOFAf0ruOFt3kcIyahn1Vpd");
+
+                Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
+
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "Publish", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "IsConnected " + connection.isConnected(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "getCurrentFPS" + stream.getCurrentFPS(), Toast.LENGTH_SHORT).show();
+
+
+                        stream.publish("a903e5a7-43d8-66cf-bcc2-0652ac49bcdb", RtmpStream.HowToPublish.LIVE);
+                        //stream.publish("clubs-live-testing", RtmpStream.HowToPublish.LIVE);
+                    }
+                }, 5000); // 5000 milliseconds (5 seconds)
+            }
+        });
     }
 
     private void stopBroadcasting(CallbackContext callbackContext) {
-        callbackContext.success("stopBroadcasting Executed!");
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Context context = cordova.getActivity().getApplicationContext();
+                connection.close();
+                stream.close();
+                Toast.makeText(context, "stopBroadcasting", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void viewLiveStream(CallbackContext callbackContext) {
