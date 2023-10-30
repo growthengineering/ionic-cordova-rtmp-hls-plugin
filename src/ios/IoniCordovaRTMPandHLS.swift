@@ -2,11 +2,14 @@
 import Foundation
 import HaishinKit
 import AVFoundation
+import Logboard
 
 @objc(IoniCordovaRTMPandHLS) class IoniCordovaRTMPandHLS: CDVPlugin {
     var connection: RTMPConnection?
     var stream: RTMPStream?
-
+    var isFrontCamera: Bool = true
+    var hkView: PiPHKView?
+    
     @objc(coolMethod:)
     func coolMethod(command: CDVInvokedUrlCommand) {
         // ...
@@ -15,6 +18,8 @@ import AVFoundation
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
         DispatchQueue.main.async {
+            LBLogger.with(HaishinKitIdentifier).level = .trace
+            
             guard self.checkPermissions() else {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Permissions not granted.")
                 self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
@@ -30,37 +35,49 @@ import AVFoundation
                 print(error)
             }
 
-            print(AVCaptureDevice.default(for: .audio))
-            print(AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front))
 
             let connection = RTMPConnection()
-            let stream = RTMPStream(connection: connection)
-            stream.sessionPreset = AVCaptureSession.Preset.medium; // Changed from .low to .medium
+            self.stream = RTMPStream(connection: connection)
+            //
+            self.stream?.sessionPreset = AVCaptureSession.Preset.low; // Changed from .low to .medium
 
-            stream.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
+            self.stream?.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
                 print("Error attaching audio: (error)")
             }
 
-            stream.attachCamera(AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)) { error in
+            self.stream?.attachCamera(AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: (self.isFrontCamera ? .front : .back))) { error in
                 print("Error attaching camera: (error)")
             }
 
-            let hkView = MTHKView(frame: self.webView.bounds)
-            hkView.layer.zPosition = 1;
-            hkView.frame = CGRect(x: 0, y: 0, width: self.webView.bounds.width, height: self.webView.bounds.height)
-            hkView.videoGravity = AVLayerVideoGravity.resizeAspectFill
-            hkView.attachStream(stream)
-            print(hkView)
-
+            //let hkView = MTHKView(frame: self.webView.bounds)
+            self.webView.isOpaque = false
+            self.webView.backgroundColor = UIColor.clear
+            self.viewController.view.backgroundColor = UIColor.clear
+            
+            self.hkView = PiPHKView(frame: self.webView.bounds)
+            self.hkView?.layer.zPosition = 0;
+            self.webView.layer.zPosition = 1;
+            self.hkView?.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            self.hkView?.attachStream(self.stream)
+           
+            // key 9e4d8f66-5f60-8155-db2e-e4c61411211f
+            // id 1OPcGxKzghlhIrmSmLFqNylx2Zy202bbq02JUaGhx9vY4
+            
             // Add ViewController#view
-            self.webView.addSubview(hkView)
+            self.viewController.view.insertSubview(self.hkView!, belowSubview: self.webView)
+            
+            
 
             // Uncomment the following lines if you want to test the RTMP connection
-            // connection.connect("rtmp://localhost/appName/instanceName")
-            // stream.publish("streamName")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1460.0) {
+                connection.connect("rtmp://global-live.mux.com:5222/app/1OPcGxKzghlhIrmSmLFqNylx2Zy202bbq02JUaGhx9vY4/9e4d8f66-5f60-8155-db2e-e4c61411211f")
+                self.stream?.publish("TestIOS")
+                self.stream?.startRecording()
 
-            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "previewCamera Executed!")
-            self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "previewCamera Executed!")
+                self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
+            }
+         
         }
     }
 
@@ -73,18 +90,19 @@ import AVFoundation
 
     @objc(swapCamera:)
         func swapCamera(command: CDVInvokedUrlCommand) {
-            /*
             DispatchQueue.main.async {
+                /*
                 guard self.stream != nil else {
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Stream not initialized.")
                     self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
                     return
-                }
+                }*/
 
                 // Toggle the camera position
                 self.isFrontCamera.toggle()
+                
                 let newCameraPosition: AVCaptureDevice.Position = self.isFrontCamera ? .front : .back
-
+                print("newCameraPosition " , newCameraPosition.rawValue)
                 // Get the new camera device
                 guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newCameraPosition) else {
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Failed to get camera.")
@@ -93,16 +111,22 @@ import AVFoundation
                 }
 
                 // Attach the new camera to the stream
-                self.stream?.attachCamera(newCamera) { error in
+                print("newCamera " , newCamera)
+                print(" self.stream " ,  self.stream)
+  
+                 self.stream?.attachCamera(newCamera) { error in
                     // Handle error if needed
+                     print("attachCamera error " , error)
                 }
-
+                /*
+                self.hkView?.attachStream(self.stream)
+                */
                 // Return success
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Camera swapped successfully.")
                 self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
-            }
-        }*/
+        }
     }
+    
 
     @objc(startBroadcasting:)
     func startBroadcasting(command: CDVInvokedUrlCommand) {
