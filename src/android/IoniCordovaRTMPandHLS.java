@@ -201,8 +201,8 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin  {
             @Override
             public void run() {
                 Context context = cordova.getActivity().getApplicationContext();
-                connection.connect("rtmp://global-live.mux.com:5222/app/s3htJJ6chNfmod013kJQ00RxWpEGt3WLkxTM02abq2Vq1k");
-                //connection.connect("rtmps://23a62c6b8b63.global-contribute.live-video.net:443/app/sk_eu-west-1_33n8N7rfIbhg_6ZSZckjqOFAf0ruOFt3kcIyahn1Vpd");
+                //connection.connect("");
+                connection.connect("");
 
                 Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
 
@@ -215,8 +215,8 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin  {
                         Toast.makeText(context, "getCurrentFPS" + stream.getCurrentFPS(), Toast.LENGTH_SHORT).show();
 
 
-                        stream.publish("a903e5a7-43d8-66cf-bcc2-0652ac49bcdb", RtmpStream.HowToPublish.LIVE);
-                        //stream.publish("clubs-live-testing", RtmpStream.HowToPublish.LIVE);
+                        //stream.publish("", RtmpStream.HowToPublish.LIVE);
+                        stream.publish("clubs-live-testing", RtmpStream.HowToPublish.LIVE);
                     }
                 }, 5000); // 5000 milliseconds (5 seconds)
             }
