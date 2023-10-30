@@ -59,24 +59,9 @@ import Logboard
             self.webView.layer.zPosition = 1;
             self.hkView?.videoGravity = AVLayerVideoGravity.resizeAspectFill
             self.hkView?.attachStream(self.stream)
-           
-            // key 9e4d8f66-5f60-8155-db2e-e4c61411211f
-            // id 1OPcGxKzghlhIrmSmLFqNylx2Zy202bbq02JUaGhx9vY4
-            
+               
             // Add ViewController#view
             self.viewController.view.insertSubview(self.hkView!, belowSubview: self.webView)
-            
-            
-
-            // Uncomment the following lines if you want to test the RTMP connection
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1460.0) {
-                connection.connect("rtmp://global-live.mux.com:5222/app/1OPcGxKzghlhIrmSmLFqNylx2Zy202bbq02JUaGhx9vY4/9e4d8f66-5f60-8155-db2e-e4c61411211f")
-                self.stream?.publish("TestIOS")
-                self.stream?.startRecording()
-
-                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "previewCamera Executed!")
-                self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
-            }
          
         }
     }
@@ -130,7 +115,13 @@ import Logboard
 
     @objc(startBroadcasting:)
     func startBroadcasting(command: CDVInvokedUrlCommand) {
-        // ...
+        connection.connect("")
+        self.stream?.publish("TestIOS")
+        self.stream?.startRecording()
+
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "previewCamera Executed!")
+        self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
+         
     }
 
     @objc(stopBroadcasting:)
