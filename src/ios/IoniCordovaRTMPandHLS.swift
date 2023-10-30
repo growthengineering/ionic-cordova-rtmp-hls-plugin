@@ -36,8 +36,8 @@ import Logboard
             }
 
 
-            let connection = RTMPConnection()
-            self.stream = RTMPStream(connection: connection)
+            self.connection = RTMPConnection()
+            self.stream = RTMPStream(connection: self.connection!)
             //
             self.stream?.sessionPreset = AVCaptureSession.Preset.low; // Changed from .low to .medium
 
@@ -76,6 +76,7 @@ import Logboard
     @objc(swapCamera:)
         func swapCamera(command: CDVInvokedUrlCommand) {
             DispatchQueue.main.async {
+                LBLogger.with(HaishinKitIdentifier).level = .trace
                 /*
                 guard self.stream != nil else {
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Stream not initialized.")
@@ -103,9 +104,7 @@ import Logboard
                     // Handle error if needed
                      print("attachCamera error " , error)
                 }
-                /*
-                self.hkView?.attachStream(self.stream)
-                */
+
                 // Return success
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Camera swapped successfully.")
                 self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
@@ -115,18 +114,29 @@ import Logboard
 
     @objc(startBroadcasting:)
     func startBroadcasting(command: CDVInvokedUrlCommand) {
-        connection.connect("")
-        self.stream?.publish("TestIOS")
-        self.stream?.startRecording()
-
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "previewCamera Executed!")
-        self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
-         
+        DispatchQueue.main.async {
+            LBLogger.with(HaishinKitIdentifier).level = .trace
+            // Configure the connection and stream
+            // Attempt to connect to the server
+            // self.connection?.connect("rtmps://23a62c6b8b63.global-contribute.live-video.net:443/app/sk_eu-west-1_33n8N7rfIbhg_6ZSZckjqOFAf0ruOFt3kcIyahn1Vpd")
+            self.connection?.connect("rtmp://global-live.mux.com:5222/app/s3htJJ6chNfmod013kJQ00RxWpEGt3WLkxTM02abq2Vq1k/a903e5a7-43d8-66cf-bcc2-0652ac49bcdb")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                print("DispatchQueue 20 sec triggered ")
+                self.stream?.publish("a903e5a7-43d8-66cf-bcc2-0652ac49bcdb")
+            }
+        }
     }
 
     @objc(stopBroadcasting:)
     func stopBroadcasting(command: CDVInvokedUrlCommand) {
-        // ...
+        DispatchQueue.main.async {
+            LBLogger.with(HaishinKitIdentifier).level = .trace
+            self.stream?.close()
+            self.connection?.close()
+
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Broadcast stopped successfully!")
+            self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
+        }
     }
 
     @objc(viewLiveStream:)
