@@ -10,6 +10,8 @@ import Logboard
     var isFrontCamera: Bool = true
     var hkView: PiPHKView?
     
+    
+   
     @objc(coolMethod:)
     func coolMethod(command: CDVInvokedUrlCommand) {
         // ...
@@ -17,7 +19,7 @@ import Logboard
 
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
-        DispatchQueue.main.async {
+     //   DispatchQueue.main.async { [self] in
             LBLogger.with(HaishinKitIdentifier).level = .trace
             
             guard self.checkPermissions() else {
@@ -38,8 +40,13 @@ import Logboard
 
             self.connection = RTMPConnection()
             self.stream = RTMPStream(connection: self.connection!)
-            //
-            self.stream?.sessionPreset = AVCaptureSession.Preset.low; // Changed from .low to .medium
+            self.stream?.sessionPreset = .hd1280x720
+            self.stream?.frameRate = 30
+            self.stream?.videoCapture(for: 0)?.isVideoMirrored = false
+            self.stream?.videoCapture(for: 0)?.preferredVideoStabilizationMode = .auto
+            self.stream?.videoSettings.videoSize = .init(width: 720, height: 1280)
+             //self.stream?.mixer.recorder.delegate = self
+            //self.stream?.sessionPreset = AVCaptureSession.Preset.low; // Changed from .low to .medium
 
             self.stream?.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
                 print("Error attaching audio: (error)")
@@ -63,7 +70,7 @@ import Logboard
             // Add ViewController#view
             self.viewController.view.insertSubview(self.hkView!, belowSubview: self.webView)
          
-        }
+       // }
     }
 
     // Function to check permissions
@@ -75,7 +82,7 @@ import Logboard
 
     @objc(swapCamera:)
         func swapCamera(command: CDVInvokedUrlCommand) {
-            DispatchQueue.main.async {
+          //  DispatchQueue.main.async {
                 LBLogger.with(HaishinKitIdentifier).level = .trace
                 /*
                 guard self.stream != nil else {
@@ -104,39 +111,50 @@ import Logboard
                     // Handle error if needed
                      print("attachCamera error " , error)
                 }
-
+               
+                
                 // Return success
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Camera swapped successfully.")
                 self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
-        }
+       // }
     }
     
 
     @objc(startBroadcasting:)
     func startBroadcasting(command: CDVInvokedUrlCommand) {
-        DispatchQueue.main.async {
+       // DispatchQueue.main.async {
             LBLogger.with(HaishinKitIdentifier).level = .trace
             // Configure the connection and stream
             // Attempt to connect to the server
             // self.connection?.connect("")
-            self.connection?.connect("")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                print("DispatchQueue 20 sec triggered ")
-                self.stream?.publish("")
+        print("self.stream ", self.stream?.info)
+        print("self.stream ", self.connection?.objectEncoding.rawValue)
+        self.stream?.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self)
+        self.stream?.addEventListener(.ioError, selector: #selector(rtmpStatusHandler), observer: self)
+        self.connection?.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self)
+        self.connection?.addEventListener(.ioError, selector: #selector(rtmpErrorHandler), observer: self)
+        self.connection?.connect(self.streamUrl)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                print("DispatchQueue 5 sec triggered ")
+                print("self.connection?.connected " , self.connection?.connected)
+                 
+                
+                print("self.connection?.frameRate " , self.stream?.frameRate)
+                self.stream?.publish(self.streamName, type:RTMPStream.HowToPublish.live)
             }
-        }
+      //  }
     }
 
     @objc(stopBroadcasting:)
     func stopBroadcasting(command: CDVInvokedUrlCommand) {
-        DispatchQueue.main.async {
+      //  DispatchQueue.main.async {
             LBLogger.with(HaishinKitIdentifier).level = .trace
             self.stream?.close()
             self.connection?.close()
 
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Broadcast stopped successfully!")
             self.commandDelegate?.send(pluginResult, callbackId: command.callbackId)
-        }
+       // }
     }
 
     @objc(viewLiveStream:)
@@ -183,4 +201,34 @@ import Logboard
         self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
         
     }
+    
+    @objc(rtmpStatusHandler:)
+    func rtmpStatusHandler( notification: Notification) {
+            print("snotification error " , notification)
+            let e = Event.from(notification)
+            guard let data: ASObject = e.data as? ASObject, let code: String = data["code"] as? String else {
+                return
+            }
+            print(code)
+            switch code {
+            case RTMPConnection.Code.connectSuccess.rawValue:
+                //retryCount = 0
+                self.stream?.publish(self.streamName)
+            // sharedObject!.connect(rtmpConnection)
+            case RTMPConnection.Code.connectFailed.rawValue, RTMPConnection.Code.connectClosed.rawValue:
+                
+                Thread.sleep(forTimeInterval: 5)
+                self.connection?.connect(self.streamUrl)
+                
+            default:
+                break
+            }
+        }
+
+    @objc(rtmpErrorHandler:)
+    func rtmpErrorHandler( notification: Notification) {
+            print("snotification error " , notification)
+        
+            self.connection?.connect(self.streamUrl)
+        }
 }
