@@ -118,11 +118,11 @@ import Logboard
             LBLogger.with(HaishinKitIdentifier).level = .trace
             // Configure the connection and stream
             // Attempt to connect to the server
-            // self.connection?.connect("rtmps://23a62c6b8b63.global-contribute.live-video.net:443/app/sk_eu-west-1_33n8N7rfIbhg_6ZSZckjqOFAf0ruOFt3kcIyahn1Vpd")
-            self.connection?.connect("rtmp://global-live.mux.com:5222/app/s3htJJ6chNfmod013kJQ00RxWpEGt3WLkxTM02abq2Vq1k/a903e5a7-43d8-66cf-bcc2-0652ac49bcdb")
+            // self.connection?.connect("")
+            self.connection?.connect("")
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 print("DispatchQueue 20 sec triggered ")
-                self.stream?.publish("a903e5a7-43d8-66cf-bcc2-0652ac49bcdb")
+                self.stream?.publish("")
             }
         }
     }
