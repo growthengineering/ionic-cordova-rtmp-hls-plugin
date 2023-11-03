@@ -59,12 +59,12 @@ import Combine
         connection.addEventListener(.sync, selector: #selector(rtmpErrorHandler), observer: self,useCapture:true)
         connection.addEventListener(.ioError, selector: #selector(rtmpErrorHandler), observer: self )
         stream = RTMPStream(connection: connection)
-        stream.videoOrientation = .portrait
-        stream.sessionPreset = .low
-        stream.frameRate = 30
+        //stream.videoOrientation = .portrait
+        //stream.sessionPreset = .low
+        //stream.frameRate = 30
         //stream.videoCapture(for: 0).isVideoMirrored = false
         //stream.videoCapture(for: 0).preferredVideoStabilizationMode = .auto
-        stream.videoSettings.videoSize = .init(width: 720, height: 1280)
+        //stream.videoSettings.videoSize = .init(width: 720, height: 1280)
         //stream.mixer.recorder.delegate = self
         //stream.sessionPreset = AVCaptureSession.Preset.low; // Changed from .low to .medium
         
@@ -108,20 +108,16 @@ import Combine
         // Configure the connection and stream
         // Attempt to connect to the server
         // connection.connect("")
-         
+        var streamUrl = "";
+        var streamName = "";
         
-        print("###### start broadcasting ",streamUrl)
-        print("###### start broadcasting ", streamName)
-        print("###### start broadcasting ", connection)
-        print("###### start broadcasting ", stream)
         // print("stream ", connection.objectEncoding.rawValue)
         connection.connect(streamUrl)
         //stream.publish(streamName)
-          DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
-          print("DispatchQueue 5 sec triggered ")
-              print("connection.connected " , self.connection.connected)
-              print("connection.frameRate " , self.stream.frameRate)
-              self.stream.publish(streamName, type:RTMPStream.HowToPublish.live)
+         DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+           // Thread.sleep(forTimeInterval: 10)
+             print("####### streamName" , streamName)
+             self.stream.publish(streamName, type:RTMPStream.HowToPublish.live)
          }
     }
     
