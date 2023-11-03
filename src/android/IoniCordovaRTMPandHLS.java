@@ -210,7 +210,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListen
             public void run() {
                 Context context = cordova.getActivity().getApplicationContext();
                 //connection.connect("");
-                connection.connect("rtmp://global-live.mux.com:5222/app");
+                connection.connect("");
 
                 Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
 
@@ -224,7 +224,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListen
 
 
                         //stream.publish("", RtmpStream.HowToPublish.LIVE);
-                       stream.publish("641aedc9-d51c-2ff5-1a85-b5e9c6e38611", RtmpStream.HowToPublish.LIVE);
+                       stream.publish("", RtmpStream.HowToPublish.LIVE);
                     }
                 }, 5000); // 5000 milliseconds (5 seconds)
             }
