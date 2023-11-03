@@ -127,25 +127,25 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListen
 
                 // Initialize RTMP connection and stream
                 connection = new RtmpConnection();
-                connection.setTimeout(100000);
+               // connection.setTimeout(100000);
                 stream = new RtmpStream(connection);
 
                 // Video Settings
-                stream.getVideoSetting().setWidth(360);
-                stream.getVideoSetting().setHeight(640);
-                stream.getVideoSetting().setBitRate(160 * 1000);
-                stream.getVideoSetting().setIFrameInterval(2);
-                VideoGravity videoGravity = VideoGravity.RESIZE_ASPECT_FILL;
-                stream.getVideoSetting().setVideoGravity(videoGravity);
+                //stream.getVideoSetting().setWidth(360);
+                //stream.getVideoSetting().setHeight(640);
+               // stream.getVideoSetting().setBitRate(2500 * 1000);
+                //stream.getVideoSetting().setIFrameInterval(2);
+              //  VideoGravity videoGravity = VideoGravity.RESIZE_ASPECT_FILL;
+              //  stream.getVideoSetting().setVideoGravity(videoGravity);
 
                 // Audio Settings
-                stream.getAudioSetting().setBitRate(32 * 1000);
-                stream.attachAudio(new AudioRecordSource(context, true));
+              //  stream.getAudioSetting().setBitRate(160 * 1000);
+                stream.attachAudio(new AudioRecordSource(context, false));
 
                 // Camera Settings
-                cameraSource = new Camera2Source(context, true);
-                cameraSource.setResolution(new Size(360, 640));
-
+                cameraSource = new Camera2Source(context, false);
+              //  cameraSource.setResolution(new Size(360, 640));
+    
                 stream.attachVideo(cameraSource);
 
                 HkSurfaceView cameraView = new HkSurfaceView(cordova.getActivity());
@@ -197,7 +197,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListen
     }
     @Override
     public void handleEvent(Event event) {
-        Log.e( "#handleEvent", event.toString());
+        Log.e( "#handleEvent", String.valueOf(event));
         //Map<String, Object> data = EventUtils.toMap(event);
         //String code = data.get("code").toString();
         //if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.rawValue)) {
@@ -205,12 +205,12 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListen
         //}
     }
     private void startBroadcasting(CallbackContext callbackContext) {
-        cordova.getActivity().runOnUiThread(new Runnable() {
+       cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Context context = cordova.getActivity().getApplicationContext();
                 //connection.connect("");
-                connection.connect("rtmp://global-live.mux.com:5222/app/");
+                connection.connect("rtmp://global-live.mux.com:5222/app");
 
                 Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
 
@@ -224,7 +224,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListen
 
 
                         //stream.publish("", RtmpStream.HowToPublish.LIVE);
-                       stream.publish("", RtmpStream.HowToPublish.LIVE);
+                       stream.publish("641aedc9-d51c-2ff5-1a85-b5e9c6e38611", RtmpStream.HowToPublish.LIVE);
                     }
                 }, 5000); // 5000 milliseconds (5 seconds)
             }
