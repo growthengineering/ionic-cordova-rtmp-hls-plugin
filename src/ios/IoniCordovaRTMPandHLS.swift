@@ -25,7 +25,7 @@ import Combine
     
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
-        LBLogger.with(HaishinKitIdentifier).level = .trace
+        //LBLogger.with(HaishinKitIdentifier).level = .trace
         //   DispatchQueue.main.async { [ in
         // LBLogger.with(HaishinKitIdentifier).level = .trace
         
@@ -103,7 +103,7 @@ import Combine
         // DispatchQueue.main.async {
         //NotificationCenter.default.addObserver(self, selector: #selector(dummyErrorHandler), name: nil, object: nil)
         
-        LBLogger.with(HaishinKitIdentifier).level = .trace
+       // LBLogger.with(HaishinKitIdentifier).level = .trace
         
         // Configure the connection and stream
         // Attempt to connect to the server
@@ -114,7 +114,7 @@ import Combine
         // print("stream ", connection.objectEncoding.rawValue)
         connection.connect(streamUrl)
         //stream.publish(streamName)
-         DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+         DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
            // Thread.sleep(forTimeInterval: 10)
              print("####### streamName" , streamName)
              self.stream.publish(streamName, type:RTMPStream.HowToPublish.live)
@@ -148,7 +148,7 @@ import Combine
     
   
     @objc private func rtmpErrorHandler( notification: Notification) {
-        print("Error: " ,  notification.name)
+        print("####### Error: " ,  notification)
         
         // connection.connect(streamUrl)
     }
@@ -181,11 +181,46 @@ import Combine
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
         // }
     }
-    
+
     @objc(viewLiveStream:)
     func viewLiveStream(command: CDVInvokedUrlCommand) {
-        // ...
+
+        webView.isOpaque = false
+        webView.backgroundColor = UIColor.clear
+        viewController.view.backgroundColor = UIColor.clear
+
+        let streamUrl = ""
+        /*
+        guard let streamURLString = command.arguments.first as? String,
+            let streamURL = URL(string: streamURLString) else {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid stream URL")
+            commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            return
+        }*/
+
+        // Initialize AVPlayer with HLS stream URL
+        let player = AVPlayer(url: streamURL)
+
+        // Create a new AVPlayerLayer instance with the player
+        let playerLayer = AVPlayerLayer(player: player)
+        playerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+        playerLayer.frame = viewController.view.bounds // You might need to adjust this depending on your layout needs
+
+        // Set the zPosition to show the playerLayer below the webView
+        playerLayer.zPosition = -1
+
+        // Add the playerLayer to the view hierarchy
+        viewController.view.layer.addSublayer(playerLayer)
+
+        // Start playback
+        player.play()
+
+        // Notify the plugin command delegate that the operation succeeded
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
+        commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
+    
+     
     
     // Function to check permissions
     func checkPermissions() -> Bool {

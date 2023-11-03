@@ -34,9 +34,9 @@
         </config-file>
         
         <framework src="HaishinKit" type="podspec" spec="~> 1.5.6" />
- 
+        
         <source-file src="src/ios/IoniCordovaRTMPandHLS.swift" />
-        <!-- <bridge-header src="src/ios/IoniCordovaRTMPandHLS-Bridging-Header.h" />  -->
+        <!-- <framework src="AVFoundation.framework" weak="true" />  -->
         
         <preference name="CAMERA_USAGE_DESCRIPTION" default="Access camera to stream live" />
         <config-file parent="NSCameraUsageDescription" target="*-Info.plist">
