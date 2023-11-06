@@ -54,10 +54,7 @@ import Combine
         
         
         connection = RTMPConnection()
-        connection.addEventListener(.rtmpStatus, selector: #selector(rtmpErrorHandler), observer: self)
-        connection.addEventListener(.event, selector: #selector(rtmpErrorHandler), useCapture:true)
-        connection.addEventListener(.sync, selector: #selector(rtmpErrorHandler), observer: self,useCapture:true)
-        connection.addEventListener(.ioError, selector: #selector(rtmpErrorHandler), observer: self )
+        connection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self, useCapture:false)
         stream = RTMPStream(connection: connection)
         //stream.videoOrientation = .portrait
         //stream.sessionPreset = .low
@@ -103,28 +100,32 @@ import Combine
         // DispatchQueue.main.async {
         //NotificationCenter.default.addObserver(self, selector: #selector(dummyErrorHandler), name: nil, object: nil)
         
-       // LBLogger.with(HaishinKitIdentifier).level = .trace
+        //LBLogger.with(HaishinKitIdentifier).level = .trace
         
         // Configure the connection and stream
         // Attempt to connect to the server
         // connection.connect("")
         var streamUrl = "";
-        var streamName = "";
+       
         
         // print("stream ", connection.objectEncoding.rawValue)
         connection.connect(streamUrl)
         //stream.publish(streamName)
-         DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+        /* DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
            // Thread.sleep(forTimeInterval: 10)
              print("####### streamName" , streamName)
              self.stream.publish(streamName, type:RTMPStream.HowToPublish.live)
-         }
+         } */
+        
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Broadcast started successfully!")
+        commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
     
     
 
-    private func rtmpStatusHandler( notification: Notification) {
-        print("rtmpStatusHandler error " , notification)
+    @objc private func rtmpStatusHandler( notification: Notification) {
+        print("########## Handler 2 " , notification)
+        var streamName = "";
         let e = Event.from(notification)
         guard let data: ASObject = e.data as? ASObject, let code: String = data["code"] as? String else {
             return
@@ -132,43 +133,17 @@ import Combine
         print(code)
         switch code {
         case RTMPConnection.Code.connectSuccess.rawValue:
-            //retryCount = 0
-           // stream.publish(streamName)
-            // sharedObject!.connect(rtmpConnection)
-            Thread.sleep(forTimeInterval: 5)
-        case RTMPConnection.Code.connectFailed.rawValue, RTMPConnection.Code.connectClosed.rawValue:
             
-            Thread.sleep(forTimeInterval: 5)
-          //  connection.connect(streamUrl)
+            print("########## Handler 2  Connected ")
+            stream.publish(streamName)
+            
+        case RTMPConnection.Code.connectFailed.rawValue, RTMPConnection.Code.connectClosed.rawValue:
+            return
             
         default:
             break
         }
     }
-    
-  
-    @objc private func rtmpErrorHandler( notification: Notification) {
-        print("####### Error: " ,  notification)
-        
-        // connection.connect(streamUrl)
-    }
-    
-    
-    
-    
-    @objc
-    private func dummyErrorHandler( notification: Notification) {
-        //if(notification.name == "test") {
-        if(  notification.name.rawValue != "FigSampleBufferDataBecameReady" &&  notification.name.rawValue != "BufferBackingWillDeallocate" &&  notification.name.rawValue != "UIScreenBrightnessDidChangeNotification") {
-            
-            print("Info: ", notification.name.rawValue)
-        }
-        // } else { print("Notification error " , notification) }
-        
-        
-    }
-    
-    
     
     @objc(stopBroadcasting:)
     func stopBroadcasting(command: CDVInvokedUrlCommand) {
