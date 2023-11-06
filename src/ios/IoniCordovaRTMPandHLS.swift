@@ -174,25 +174,28 @@ import Combine
         }*/
 
         // Initialize AVPlayer with HLS stream URL
-        let player = AVPlayer(url: streamURL)
-
-        // Create a new AVPlayerLayer instance with the player
-        let playerLayer = AVPlayerLayer(player: player)
-        playerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        playerLayer.frame = viewController.view.bounds // You might need to adjust this depending on your layout needs
-
-        // Set the zPosition to show the playerLayer below the webView
-        playerLayer.zPosition = -1
-
-        // Add the playerLayer to the view hierarchy
-        viewController.view.layer.addSublayer(playerLayer)
-
-        // Start playback
-        player.play()
-
-        // Notify the plugin command delegate that the operation succeeded
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
-        commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        if let url = URL(string: streamUrl) {
+            
+            let player = AVPlayer(url: url)
+            
+            // Create a new AVPlayerLayer instance with the player
+            let playerLayer = AVPlayerLayer(player: player)
+            playerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            playerLayer.frame = viewController.view.bounds // You might need to adjust this depending on your layout needs
+            
+            // Set the zPosition to show the playerLayer below the webView
+            playerLayer.zPosition = -1
+            
+            // Add the playerLayer to the view hierarchy
+            viewController.view.layer.addSublayer(playerLayer)
+            
+            // Start playback
+            player.play()
+            
+            // Notify the plugin command delegate that the operation succeeded
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
+            commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
     }
     
      
