@@ -64,7 +64,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 /**
  * This class echoes a string called from JavaScript.
  */
-public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListener {
+public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
     private RtmpStream stream;
     //private HkSurfaceView cameraView;
@@ -195,38 +195,30 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListen
         });
         callbackContext.success("swapCamera Executed!");
     }
-    @Override
-    public void handleEvent(Event event) {
-        Log.e( "#handleEvent", String.valueOf(event));
-        //Map<String, Object> data = EventUtils.toMap(event);
-        //String code = data.get("code").toString();
-        //if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.rawValue)) {
-       //     stream.publish("641aedc9-d51c-2ff5-1a85-b5e9c6e38611");
-        //}
-    }
+
     private void startBroadcasting(CallbackContext callbackContext) {
        cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Context context = cordova.getActivity().getApplicationContext();
                 //connection.connect("");
+
+                connection.addEventListener( "rtmpStatus", (event -> {
+                    Map<String, Object> data = EventUtils.INSTANCE.toMap(event);
+                    String code = data.get("code").toString();
+                    if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.getRawValue())) {
+                        stream.publish("", RtmpStream.HowToPublish.LIVE);
+                    }
+                }), false);
+
+
+
                 connection.connect("");
+
+
 
                 Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
 
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context, "Publish", Toast.LENGTH_SHORT).show();
-                        Toast.makeText(context, "IsConnected " + connection.isConnected(), Toast.LENGTH_SHORT).show();
-                        Toast.makeText(context, "getCurrentFPS" + stream.getCurrentFPS(), Toast.LENGTH_SHORT).show();
-
-
-                        //stream.publish("", RtmpStream.HowToPublish.LIVE);
-                       stream.publish("", RtmpStream.HowToPublish.LIVE);
-                    }
-                }, 5000); // 5000 milliseconds (5 seconds)
             }
         });
     }
