@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.camera2.CameraCharacteristics;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
@@ -44,6 +45,12 @@ import androidx.core.content.ContextCompat;
 
 import com.bambuser.broadcaster.SurfaceViewWithAutoAR;
 
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.haishinkit.event.Event;
 import com.haishinkit.event.EventUtils;
 import com.haishinkit.event.IEventListener;
@@ -244,43 +251,53 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin implements IEventListen
     }
 
     private void viewLiveStream(CallbackContext callbackContext) {
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Context context = cordova.getActivity().getApplicationContext();
 
-        String hlsStreamUrl = "";
+                    String hlsStreamUrl = "";
 
-        SimpleExoPlayer player = new SimpleExoPlayer.Builder(context).build();
+                    SimpleExoPlayer player = new SimpleExoPlayer.Builder(context).build();
 
-        PlayerView playerView = new PlayerView(cordova.getActivity());
-        playerView.setPlayer(player);
+                    PlayerView playerView = new PlayerView(cordova.getActivity());
+                    playerView.setPlayer(player);
+                    playerView.setUseController(false);
 
- 
-        MediaSource mediaSource = new HlsMediaSource.Factory(new DefaultHttpDataSource.Factory())
-            .createMediaSource(MediaItem.fromUri(Uri.parse(hlsStreamUrl)));
+                    MediaSource mediaSource = new HlsMediaSource.Factory(new DefaultHttpDataSource.Factory())
+                            .createMediaSource(MediaItem.fromUri(Uri.parse(hlsStreamUrl)));
 
- 
-        player.setMediaSource(mediaSource);
-        player.prepare();
 
- 
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT
-        );
-        playerView.setLayoutParams(layoutParams);
+                    player.setMediaSource(mediaSource);
+                    player.prepare();
 
-        ViewGroup parentView = (ViewGroup) webView.getView().getParent();
-        if (parentView instanceof FrameLayout) {
-            FrameLayout frameLayout = (FrameLayout) parentView;
-            frameLayout.addView(playerView, 0);  // add cameraView at the bottom
-            webView.getView().bringToFront();  // bring webView to the front
-        } else {
-            cordova.getActivity().addContentView(playerView, layoutParams);
-            playerView.bringToFront();
-        }
 
-        // Add the camera view to your Cordova WebView
-        webView.getView().setBackgroundColor(Color.TRANSPARENT);
+                    ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                    );
+                    playerView.setLayoutParams(layoutParams);
 
-        callbackContext.success("viewLiveStream Executed!");
+                    ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+                    if (parentView instanceof FrameLayout) {
+                        FrameLayout frameLayout = (FrameLayout) parentView;
+                        frameLayout.addView(playerView, 0);  // add cameraView at the bottom
+                        webView.getView().bringToFront();  // bring webView to the front
+                    } else {
+                        cordova.getActivity().addContentView(playerView, layoutParams);
+                        playerView.bringToFront();
+                    }
+
+                    // Add the camera view to your Cordova WebView
+                    webView.getView().setBackgroundColor(Color.TRANSPARENT);
+
+                    callbackContext.success("viewLiveStream Executed!");
+                }catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
     }
 
     private void requestPermissions(CallbackContext callbackContext) {
