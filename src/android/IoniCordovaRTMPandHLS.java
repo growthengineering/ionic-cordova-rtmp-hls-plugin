@@ -204,14 +204,12 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         });
     }
 
-    private void viewLiveStream(CallbackContext callbackContext) {
+    private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 try {
                     Context context = cordova.getActivity().getApplicationContext();
-
-                    String hlsStreamUrl = "";
 
                     SimpleExoPlayer player = new SimpleExoPlayer.Builder(context).build();
 
@@ -220,7 +218,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     playerView.setUseController(false);
 
                     MediaSource mediaSource = new HlsMediaSource.Factory(new DefaultHttpDataSource.Factory())
-                            .createMediaSource(MediaItem.fromUri(Uri.parse(hlsStreamUrl)));
+                            .createMediaSource(MediaItem.fromUri(Uri.parse(HLSUrl)));
 
 
                     player.setMediaSource(mediaSource);
