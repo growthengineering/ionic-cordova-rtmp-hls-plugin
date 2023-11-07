@@ -11,39 +11,18 @@ import Combine
     var connection: RTMPConnection!
     var stream: RTMPStream!
     var isFrontCamera: Bool = true
-    //var hkView: PiPHKView!
     var hkView: MTHKView!
-    
-    var fps: String = "FPS"
-    var published = false
+    var HLSUrl: String = "";
     
 
-    @objc(coolMethod:)
-    func coolMethod(command: CDVInvokedUrlCommand) {
-        // ...
-    }
-    
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
-        //LBLogger.with(HaishinKitIdentifier).level = .trace
-        //   DispatchQueue.main.async { [ in
-        // LBLogger.with(HaishinKitIdentifier).level = .trace
-        
         guard checkPermissions() else {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Permissions not granted.")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
         }
-        
-        /* let session = AVAudioSession.sharedInstance()
-         do {
-         try session.setCategory(AVAudioSession.Category.playAndRecord)
-         try session.setMode(AVAudioSession.Mode.videoRecording)
-         try session.setActive(true)
-         } catch {
-         print(error)
-         }*/
-        
+
         let session = AVAudioSession.sharedInstance()
         do {
             try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
@@ -56,15 +35,7 @@ import Combine
         connection = RTMPConnection()
         connection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self, useCapture:false)
         stream = RTMPStream(connection: connection)
-        //stream.videoOrientation = .portrait
-        //stream.sessionPreset = .low
-        //stream.frameRate = 30
-        //stream.videoCapture(for: 0).isVideoMirrored = false
-        //stream.videoCapture(for: 0).preferredVideoStabilizationMode = .auto
-        //stream.videoSettings.videoSize = .init(width: 720, height: 1280)
-        //stream.mixer.recorder.delegate = self
-        //stream.sessionPreset = AVCaptureSession.Preset.low; // Changed from .low to .medium
-        
+
         
         stream.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
             print("Error attaching audio: (error)")
@@ -75,67 +46,40 @@ import Combine
         }
         
         
-        
-        //let hkView = MTHKView(frame: webView.bounds)
         webView.isOpaque = false
         webView.backgroundColor = UIColor.clear
         viewController.view.backgroundColor = UIColor.clear
-        
-        // hkView = PiPHKView(frame: webView.bounds)
         hkView = MTHKView(frame: webView.bounds)
         hkView.layer.zPosition = 0;
         webView.layer.zPosition = 1;
         hkView.videoGravity = AVLayerVideoGravity.resizeAspectFill
         hkView.attachStream(stream)
-        
-        // Add ViewController#view
         viewController.view.insertSubview(hkView, belowSubview: webView)
-        
-        // }
+
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "CameraPreview started!")
+        commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
     
     
     @objc(startBroadcasting:)
-    func startBroadcasting(command: CDVInvokedUrlCommand) {
-        // DispatchQueue.main.async {
-        //NotificationCenter.default.addObserver(self, selector: #selector(dummyErrorHandler), name: nil, object: nil)
-        
-        //LBLogger.with(HaishinKitIdentifier).level = .trace
-        
-        // Configure the connection and stream
-        // Attempt to connect to the server
-        // connection.connect("")
-        var streamUrl = "";
-       
-        
-        // print("stream ", connection.objectEncoding.rawValue)
-        connection.connect(streamUrl)
-        //stream.publish(streamName)
-        /* DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-           // Thread.sleep(forTimeInterval: 10)
-             print("####### streamName" , streamName)
-             self.stream.publish(streamName, type:RTMPStream.HowToPublish.live)
-         } */
-        
+    func startBroadcasting(RTMPSUrl, command: CDVInvokedUrlCommand) {
+        connection.connect(RTMPSUrl)
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Broadcast started successfully!")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
     
     
 
-    @objc private func rtmpStatusHandler( notification: Notification) {
-        print("########## Handler 2 " , notification)
-        var streamName = "";
+    @objc private func rtmpStatusHandler(notification: Notification) {
+
         let e = Event.from(notification)
         guard let data: ASObject = e.data as? ASObject, let code: String = data["code"] as? String else {
             return
         }
         print(code)
         switch code {
-        case RTMPConnection.Code.connectSuccess.rawValue:
-            
-            print("########## Handler 2  Connected ")
-            stream.publish(streamName)
+        case RTMPConnection.Code.connectSuccess.rawValue:=
+            stream.publish("")
             
         case RTMPConnection.Code.connectFailed.rawValue, RTMPConnection.Code.connectClosed.rawValue:
             return
@@ -147,14 +91,11 @@ import Combine
     
     @objc(stopBroadcasting:)
     func stopBroadcasting(command: CDVInvokedUrlCommand) {
-        //  DispatchQueue.main.async {
-        // LBLogger.with(HaishinKitIdentifier).level = .trace
         stream.close()
         connection.close()
         
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Broadcast stopped successfully!")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
-        // }
     }
     
     @objc(viewLiveStream:)
@@ -171,55 +112,43 @@ import Combine
     
     @objc(swapCamera:)
     func swapCamera(command: CDVInvokedUrlCommand) {
-        //  DispatchQueue.main.async {
-        //LBLogger.with(HaishinKitIdentifier).level = .trace
-        
         guard stream != nil else {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Stream not initialized.")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
         }
         
-        // Toggle the camera position
         isFrontCamera.toggle()
         
         let newCameraPosition: AVCaptureDevice.Position = isFrontCamera ? .front : .back
-        print("newCameraPosition " , newCameraPosition.rawValue)
-        // Get the new camera device
+
         guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newCameraPosition) else {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Failed to get camera.")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
         }
         
-        
         stream.attachCamera(newCamera) { error in
-            // Handle error if needed
             print("attachCamera error " , error)
         }
         
-        
-        // Return success
+
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Camera swapped successfully.")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
-        // }
     }
     
     @objc(requestPermissions:)
     func requestPermissions(command: CDVInvokedUrlCommand) {
-        // Check for camera permission
         let cameraStatus = AVCaptureDevice.authorizationStatus(for: AVMediaType.video)
-        // Check for microphone permission
         let microphoneStatus = AVCaptureDevice.authorizationStatus(for: AVMediaType.audio)
-        
-        // If both permissions are granted, return success
+
         if cameraStatus == .authorized && microphoneStatus == .authorized {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Permissions granted")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
         }
         
-        // If not, request the necessary permissions
+
         var permissionsToRequest: [AVMediaType] = []
         if cameraStatus == .notDetermined {
             permissionsToRequest.append(AVMediaType.video)
@@ -231,18 +160,15 @@ import Combine
         for mediaType in permissionsToRequest {
             AVCaptureDevice.requestAccess(for: mediaType) { granted in
                 if !granted {
-                    // If any permission is denied, return failure
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Permission denied")
-                    //commandDelegate.send(pluginResult, callbackId: command.callbackId)
+                    commandDelegate.send(pluginResult, callbackId: command.callbackId)
                     return
                 }
             }
         }
         
-        // Return success if permissions were granted or if they were already granted
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Permissions granted")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
-        
     }
     
     
