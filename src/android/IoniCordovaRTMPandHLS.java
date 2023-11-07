@@ -2,64 +2,27 @@ package cordova.plugin.ionicrtmphls;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.camera2.CameraCharacteristics;
-import android.os.Bundle;
-import android.util.Log;
-import android.util.Size;
-import android.view.Display;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
-
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import com.bambuser.broadcaster.SurfaceViewWithAutoAR;
-
-import com.haishinkit.event.Event;
 import com.haishinkit.event.EventUtils;
-import com.haishinkit.event.IEventListener;
-import com.haishinkit.graphics.VideoGravity;
 import com.haishinkit.media.AudioRecordSource;
 import com.haishinkit.media.Camera2Source;
 import com.haishinkit.rtmp.RtmpConnection;
 import com.haishinkit.rtmp.RtmpStream;
 import com.haishinkit.view.HkSurfaceView;
-import com.haishinkit.event.Event;
-import com.haishinkit.event.IEventListener;
-import com.haishinkit.rtmp.RtmpStream;
-
 import java.util.Map;
-import android.os.Handler;
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
@@ -196,7 +159,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         });
     }
 
-    private void viewLiveStream(CallbackContext callbackContext) {
+    private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {
         callbackContext.success("viewLiveStream Executed!");
     }
 
