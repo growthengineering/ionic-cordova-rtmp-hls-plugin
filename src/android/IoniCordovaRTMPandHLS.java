@@ -88,8 +88,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 this.swapCamera(callbackContext);
                 return true;
             case "startBroadcasting":
-                String RTMPSUrl = args.getString(0);
-                this.startBroadcasting(RTMPSUrl, callbackContext);
+                String RTMPUrl = args.getString(0);
+                String RTMPKey = args.getString(0);
+                this.startBroadcasting(RTMPUrl, RTMPKey, callbackContext);
                 return true;
             case "stopBroadcasting":
                 this.stopBroadcasting(callbackContext);
@@ -163,7 +164,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         });
     }
 
-    private void startBroadcasting(String RTMPSUrl, CallbackContext callbackContext) {
+    private void startBroadcasting(String RTMPSUrl, String RTMPKey, CallbackContext callbackContext) {
        cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -173,11 +174,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     Map<String, Object> data = EventUtils.INSTANCE.toMap(event);
                     String code = data.get("code").toString();
                     if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.getRawValue())) {
-                        stream.publish("", RtmpStream.HowToPublish.LIVE);
+                        stream.publish(RTMPKey, RtmpStream.HowToPublish.LIVE);
                     }
                 }), false);
-
-
 
                 connection.connect(RTMPSUrl);
                 Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
