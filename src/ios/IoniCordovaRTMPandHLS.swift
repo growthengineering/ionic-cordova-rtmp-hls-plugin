@@ -14,7 +14,6 @@ import Combine
     var hkView: MTHKView!
     var HLSUrl: String = "";
     
-
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
         guard checkPermissions() else {
@@ -60,7 +59,6 @@ import Combine
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
     
-    
     @objc(startBroadcasting:)
     func startBroadcasting(RTMPSUrl, command: CDVInvokedUrlCommand) {
         connection.connect(RTMPSUrl)
@@ -68,8 +66,6 @@ import Combine
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
     
-    
-
     @objc private func rtmpStatusHandler(notification: Notification) {
 
         let e = Event.from(notification)
@@ -78,7 +74,7 @@ import Combine
         }
         print(code)
         switch code {
-        case RTMPConnection.Code.connectSuccess.rawValue:=
+        case RTMPConnection.Code.connectSuccess.rawValue:
             stream.publish("")
             
         case RTMPConnection.Code.connectFailed.rawValue, RTMPConnection.Code.connectClosed.rawValue:
@@ -100,48 +96,35 @@ import Combine
 
     @objc(viewLiveStream:)
     func viewLiveStream(command: CDVInvokedUrlCommand) {
-
         webView.isOpaque = false
         webView.backgroundColor = UIColor.clear
         viewController.view.backgroundColor = UIColor.clear
 
-        let streamUrl = ""
-        /*
         guard let streamURLString = command.arguments.first as? String,
             let streamURL = URL(string: streamURLString) else {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid stream URL")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
-        }*/
-
-        // Initialize AVPlayer with HLS stream URL
-        if let url = URL(string: streamUrl) {
+        }
+        
+        if let url = URL(string: streamURL) {
             
             let player = AVPlayer(url: url)
-            
-            // Create a new AVPlayerLayer instance with the player
             let playerLayer = AVPlayerLayer(player: player)
             playerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-            playerLayer.frame = viewController.view.bounds // You might need to adjust this depending on your layout needs
-            
-            // Set the zPosition to show the playerLayer below the webView
+            playerLayer.frame = viewController.view.bounds
             playerLayer.zPosition = -1
-            
-            // Add the playerLayer to the view hierarchy
             viewController.view.layer.addSublayer(playerLayer)
             
-            // Start playback
             player.play()
             
-            // Notify the plugin command delegate that the operation succeeded
+
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
         }
     }
     
-     
-    
-    // Function to check permissions
+
     func checkPermissions() -> Bool {
         let cameraPermission = AVCaptureDevice.authorizationStatus(for: .video)
         let audioPermission = AVCaptureDevice.authorizationStatus(for: .audio)
