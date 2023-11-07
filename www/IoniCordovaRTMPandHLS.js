@@ -10,8 +10,8 @@ IoniCordovaRTMPandHLS.swapCamera = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'swapCamera', []);
 };
 
-IoniCordovaRTMPandHLS.startBroadcasting = function (RTMPSUrl, success, error) {
-    exec(success, error, 'IoniCordovaRTMPandHLS', 'startBroadcasting', [RTMPSUrl]);
+IoniCordovaRTMPandHLS.startBroadcasting = function (RTMPUrl, RTMPKey, success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'startBroadcasting', [RTMPUrl, RTMPKey]);
 };
 
 IoniCordovaRTMPandHLS.stopBroadcasting = function (success, error) {

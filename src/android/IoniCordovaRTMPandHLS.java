@@ -2,7 +2,6 @@ package cordova.plugin.ionicrtmphls;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -16,35 +15,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
-
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
-
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import com.bambuser.broadcaster.SurfaceViewWithAutoAR;
-
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -53,20 +34,12 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.haishinkit.event.Event;
 import com.haishinkit.event.EventUtils;
-import com.haishinkit.event.IEventListener;
-import com.haishinkit.graphics.VideoGravity;
 import com.haishinkit.media.AudioRecordSource;
 import com.haishinkit.media.Camera2Source;
 import com.haishinkit.rtmp.RtmpConnection;
 import com.haishinkit.rtmp.RtmpStream;
 import com.haishinkit.view.HkSurfaceView;
-import com.haishinkit.event.Event;
-import com.haishinkit.event.IEventListener;
-import com.haishinkit.rtmp.RtmpStream;
-
 import java.util.Map;
-import android.os.Handler;
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
@@ -95,8 +68,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 this.swapCamera(callbackContext);
                 return true;
             case "startBroadcasting":
-                String RTMPSUrl = args.getString(0);
-                this.startBroadcasting(RTMPSUrl, callbackContext);
+                String RTMPUrl = args.getString(0);
+                String RTMPKey = args.getString(0);
+                this.startBroadcasting(RTMPUrl, RTMPKey, callbackContext);
                 return true;
             case "stopBroadcasting":
                 this.stopBroadcasting(callbackContext);
@@ -170,7 +144,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         });
     }
 
-    private void startBroadcasting(String RTMPSUrl, CallbackContext callbackContext) {
+    private void startBroadcasting(String RTMPSUrl, String RTMPKey, CallbackContext callbackContext) {
        cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -180,11 +154,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     Map<String, Object> data = EventUtils.INSTANCE.toMap(event);
                     String code = data.get("code").toString();
                     if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.getRawValue())) {
-                        stream.publish("", RtmpStream.HowToPublish.LIVE);
+                        stream.publish(RTMPKey, RtmpStream.HowToPublish.LIVE);
                     }
                 }), false);
-
-
 
                 connection.connect(RTMPSUrl);
                 Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
