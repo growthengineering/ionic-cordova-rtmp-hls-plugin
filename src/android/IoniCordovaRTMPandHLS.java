@@ -61,17 +61,14 @@ import java.util.Map;
 import android.os.Handler;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
-/**
- * This class echoes a string called from JavaScript.
- */
+
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
     private RtmpStream stream;
-    //private HkSurfaceView cameraView;
     private Camera2Source cameraSource;
     private CordovaWebView webView;
     private CordovaInterface cordova;
-    private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;  // Default to back-facing camera
+    private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;
 
     @Override
     public void initialize(final CordovaInterface _cordova, final CordovaWebView _webView) {
@@ -83,24 +80,23 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         switch(action) {
-            case "coolMethod":
-                String message = args.getString(0);
-                this.coolMethod(message, callbackContext);
-                return true;
             case "previewCamera":
-                this.previewCamera(args.getInt(0), args.getInt(1), args.getInt(2), args.getInt(3), callbackContext);
+                JSONArray CameraOpts = args;
+                this.previewCamera(CameraOpts, callbackContext);
                 return true;
             case "swapCamera":
                 this.swapCamera(callbackContext);
                 return true;
             case "startBroadcasting":
-                this.startBroadcasting(callbackContext);
+                String RTMPSUrl = args.getString(0);
+                this.startBroadcasting(RTMPSUrl, callbackContext);
                 return true;
             case "stopBroadcasting":
                 this.stopBroadcasting(callbackContext);
                 return true;
             case "viewLiveStream":
-                this.viewLiveStream(callbackContext);
+                String HLSUrl = args.getString(0);
+                this.viewLiveStream(HLSUrl, callbackContext);
                 return true;
             case "requestPermissions":
                 this.requestPermissions(callbackContext);
@@ -109,43 +105,19 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         return false;
     }
 
-    private void coolMethod(String message, CallbackContext callbackContext) {
-        if (message != null && message.length() > 0) {
-            callbackContext.success(message);
-        } else {
-            callbackContext.error("Expected one non-empty string argument.");
-        }
-    }
 
-    private void previewCamera(int left, int top, int width, int height, CallbackContext callbackContext) {
+    private void previewCamera(JSONArray CameraOpts, CallbackContext callbackContext) {
         cordova.getActivity().runOnUiThread(new Runnable() {
             @SuppressLint("ResourceAsColor")
             @Override
             public void run() {
                 Context context = cordova.getActivity().getApplicationContext();
-                Toast.makeText(context, "previewCamera", Toast.LENGTH_SHORT).show();
-
-                // Initialize RTMP connection and stream
+            
                 connection = new RtmpConnection();
-               // connection.setTimeout(100000);
                 stream = new RtmpStream(connection);
-
-                // Video Settings
-                //stream.getVideoSetting().setWidth(360);
-                //stream.getVideoSetting().setHeight(640);
-               // stream.getVideoSetting().setBitRate(2500 * 1000);
-                //stream.getVideoSetting().setIFrameInterval(2);
-              //  VideoGravity videoGravity = VideoGravity.RESIZE_ASPECT_FILL;
-              //  stream.getVideoSetting().setVideoGravity(videoGravity);
-
-                // Audio Settings
-              //  stream.getAudioSetting().setBitRate(160 * 1000);
                 stream.attachAudio(new AudioRecordSource(context, false));
 
-                // Camera Settings
                 cameraSource = new Camera2Source(context, false);
-              //  cameraSource.setResolution(new Size(360, 640));
-    
                 stream.attachVideo(cameraSource);
 
                 HkSurfaceView cameraView = new HkSurfaceView(cordova.getActivity());
@@ -162,15 +134,13 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 ViewGroup parentView = (ViewGroup) webView.getView().getParent();
                 if (parentView instanceof FrameLayout) {
                     FrameLayout frameLayout = (FrameLayout) parentView;
-                    frameLayout.addView(cameraView, 0);  // add cameraView at the bottom
-                    webView.getView().bringToFront();  // bring webView to the front
+                    frameLayout.addView(cameraView, 0);
+                    webView.getView().bringToFront();
                 } else {
-                    // If the parent view is not a FrameLayout, just add the cameraView directly to the activity
                     cordova.getActivity().addContentView(cameraView, layoutParams);
                     cameraView.bringToFront();
                 }
 
-                // Add the camera view to your Cordova WebView
                 webView.getView().setBackgroundColor(Color.TRANSPARENT);
                 callbackContext.success("Camera preview started!");
             }
@@ -183,25 +153,21 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             public void run() {
                 cameraSource.close();
 
-                // Toggle the current camera facing direction
                 currentCameraFacing = (currentCameraFacing == CameraCharacteristics.LENS_FACING_BACK)
                         ? CameraCharacteristics.LENS_FACING_FRONT
                         : CameraCharacteristics.LENS_FACING_BACK;
 
-                // Open the new camera
                 cameraSource.open(currentCameraFacing);
-
+                callbackContext.success("swapCamera Executed!");
             }
         });
-        callbackContext.success("swapCamera Executed!");
     }
 
-    private void startBroadcasting(CallbackContext callbackContext) {
+    private void startBroadcasting(String RTMPSUrl, CallbackContext callbackContext) {
        cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 Context context = cordova.getActivity().getApplicationContext();
-                //connection.connect("");
 
                 connection.addEventListener( "rtmpStatus", (event -> {
                     Map<String, Object> data = EventUtils.INSTANCE.toMap(event);
@@ -213,12 +179,8 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
 
 
-                connection.connect("");
-
-
-
+                connection.connect(RTMPSUrl);
                 Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
-
             }
         });
     }
@@ -245,7 +207,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 Manifest.permission.RECORD_AUDIO
         };
 
-        // Check if permissions are granted
         boolean hasPermissions = true;
         for (String permission : permissions) {
             if (ContextCompat.checkSelfPermission(cordova.getActivity(), permission) != PackageManager.PERMISSION_GRANTED) {
@@ -253,8 +214,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 break;
             }
         }
-
-        // Request permissions if not granted
+        
         if (!hasPermissions) {
             cordova.requestPermissions(this, 1, permissions);
         }
