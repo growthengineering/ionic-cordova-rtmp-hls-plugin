@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.Toast;
@@ -184,16 +185,21 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void stopBroadcasting(CallbackContext callbackContext) {
-        cordova.getActivity().runOnUiThread(new Runnable() {
+        new AsyncTask<Void, Void, Void>() {
             @Override
-            public void run() {
+            protected Void doInBackground(Void... voids) {
                 connection.close();
                 stream.close();
                 connection = null;
                 stream = null;
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
                 callbackContext.success("stopBroadcasting Executed!");
             }
-        });
+        }.execute();
     }
 
     private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {
