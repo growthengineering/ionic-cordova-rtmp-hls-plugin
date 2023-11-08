@@ -6,9 +6,10 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.camera2.CameraCharacteristics;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaInterface;
@@ -16,6 +17,12 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 import org.json.JSONArray;
 import org.json.JSONException;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.haishinkit.event.EventUtils;
 import com.haishinkit.media.AudioRecordSource;
 import com.haishinkit.media.Camera2Source;
@@ -24,12 +31,13 @@ import com.haishinkit.rtmp.RtmpStream;
 import com.haishinkit.view.HkSurfaceView;
 import java.util.Map;
 
-
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
     private RtmpStream stream;
     private Camera2Source cameraSource;
     private HkSurfaceView cameraView;
+    private PlayerView playerView;
+    private SimpleExoPlayer exoPlayer;
     private CordovaWebView webView;
     private CordovaInterface cordova;
     private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;
@@ -75,7 +83,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         }
         return false;
     }
-
 
     private void previewCamera(JSONArray CameraOpts, CallbackContext callbackContext) {
         cordova.getActivity().runOnUiThread(new Runnable() {
@@ -123,11 +130,17 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             @Override
             public void run() {
                 if(cameraView != null) {
+                    cameraSource.close();
+                    cameraSource = null;
+                    stream = null;
+                    connection = null;
+
                     ViewGroup parentView = (ViewGroup) webView.getView().getParent();
                     if (parentView instanceof FrameLayout) {
                         FrameLayout frameLayout = (FrameLayout) parentView;
                         frameLayout.removeView(cameraView);
                         webView.getView().bringToFront();
+                        webView.getView().setBackgroundColor(Color.WHITE);
                         cameraView = null;
                     }
                     callbackContext.success("closeCameraPreview Executed!");
@@ -171,22 +184,91 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void stopBroadcasting(CallbackContext callbackContext) {
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                connection.close();
+                stream.close();
+                connection = null;
+                stream = null;
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                callbackContext.success("stopBroadcasting Executed!");
+            }
+        }.execute();
+    }
+
+    private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                connection.close();
-                stream.close();
-                callbackContext.success("stopBroadcasting Executed!");
+                try {
+                    Context context = cordova.getActivity().getApplicationContext();
+
+                    exoPlayer = new SimpleExoPlayer.Builder(context).build();
+                    exoPlayer.setPlayWhenReady(true);
+
+                    playerView = new PlayerView(cordova.getActivity());
+                    playerView.setPlayer(exoPlayer);
+                    playerView.setUseController(false);
+
+                    MediaSource mediaSource = new HlsMediaSource.Factory(new DefaultHttpDataSource.Factory())
+                            .createMediaSource(MediaItem.fromUri(Uri.parse(HLSUrl)));
+
+                    exoPlayer.setMediaSource(mediaSource);
+                    exoPlayer.prepare();
+
+                    ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                    );
+                    playerView.setLayoutParams(layoutParams);
+
+                    ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+                    if (parentView instanceof FrameLayout) {
+                        FrameLayout frameLayout = (FrameLayout) parentView;
+                        frameLayout.addView(playerView, 0);
+                        webView.getView().bringToFront();
+                    } else {
+                        cordova.getActivity().addContentView(playerView, layoutParams);
+                        playerView.bringToFront();
+                    }
+
+                    exoPlayer.play();
+                    webView.getView().setBackgroundColor(Color.TRANSPARENT);
+
+                    callbackContext.success("viewLiveStream Executed!");
+                }catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         });
     }
 
-    private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {
-        callbackContext.success("viewLiveStream Executed!");
-    }
-
     private void closeLiveStream(CallbackContext callbackContext) {
-        callbackContext.success("closeLiveStream Executed!");
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(playerView != null) {
+                    exoPlayer.stop();
+                    exoPlayer.release();
+                    exoPlayer = null;
+
+                    ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+                    if (parentView instanceof FrameLayout) {
+                        FrameLayout frameLayout = (FrameLayout) parentView;
+                        frameLayout.removeView(playerView);
+                        webView.getView().bringToFront();
+                        webView.getView().setBackgroundColor(Color.WHITE);
+                        playerView = null;
+                    }
+                    callbackContext.success("closeLiveStream Executed!");
+                }
+            }
+        });
     }
 
     private void requestPermissions(CallbackContext callbackContext) {

@@ -20,7 +20,8 @@
             <uses-permission android:name="android.permission.RECORD_AUDIO" />
             <uses-feature android:name="android.hardware.camera" />
         </config-file>
-
+        
+        <framework src="com.google.android.exoplayer:exoplayer:2.19.1" /> 
         <framework src="com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4" />
         <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
 
