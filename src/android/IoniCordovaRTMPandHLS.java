@@ -31,12 +31,13 @@ import com.haishinkit.rtmp.RtmpStream;
 import com.haishinkit.view.HkSurfaceView;
 import java.util.Map;
 
-
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
     private RtmpStream stream;
     private Camera2Source cameraSource;
     private HkSurfaceView cameraView;
+    private PlayerView playerView;
+    private SimpleExoPlayer exoPlayer;
     private CordovaWebView webView;
     private CordovaInterface cordova;
     private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;
@@ -82,7 +83,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         }
         return false;
     }
-
 
     private void previewCamera(JSONArray CameraOpts, CallbackContext callbackContext) {
         cordova.getActivity().runOnUiThread(new Runnable() {
@@ -130,11 +130,17 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             @Override
             public void run() {
                 if(cameraView != null) {
+                    cameraSource.close();
+                    cameraSource = null;
+                    stream = null;
+                    connection = null;
+
                     ViewGroup parentView = (ViewGroup) webView.getView().getParent();
                     if (parentView instanceof FrameLayout) {
                         FrameLayout frameLayout = (FrameLayout) parentView;
                         frameLayout.removeView(cameraView);
                         webView.getView().bringToFront();
+                        webView.getView().setBackgroundColor(Color.WHITE);
                         cameraView = null;
                     }
                     callbackContext.success("closeCameraPreview Executed!");
@@ -183,6 +189,8 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             public void run() {
                 connection.close();
                 stream.close();
+                connection = null;
+                stream = null;
                 callbackContext.success("stopBroadcasting Executed!");
             }
         });
@@ -195,18 +203,18 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 try {
                     Context context = cordova.getActivity().getApplicationContext();
 
-                    SimpleExoPlayer player = new SimpleExoPlayer.Builder(context).build();
+                    exoPlayer = new SimpleExoPlayer.Builder(context).build();
 
-                    PlayerView playerView = new PlayerView(cordova.getActivity());
-                    playerView.setPlayer(player);
+                    playerView = new PlayerView(cordova.getActivity());
+                    playerView.setPlayer(exoPlayer);
                     playerView.setUseController(false);
 
                     MediaSource mediaSource = new HlsMediaSource.Factory(new DefaultHttpDataSource.Factory())
                             .createMediaSource(MediaItem.fromUri(Uri.parse(HLSUrl)));
 
 
-                    player.setMediaSource(mediaSource);
-                    player.prepare();
+                    exoPlayer.setMediaSource(mediaSource);
+                    exoPlayer.prepare();
 
 
                     ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
@@ -237,7 +245,26 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void closeLiveStream(CallbackContext callbackContext) {
-        callbackContext.success("closeLiveStream Executed!");
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(playerView != null) {
+                    exoPlayer.stop();
+                    exoPlayer.release();
+                    exoPlayer = null;
+
+                    ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+                    if (parentView instanceof FrameLayout) {
+                        FrameLayout frameLayout = (FrameLayout) parentView;
+                        frameLayout.removeView(playerView);
+                        webView.getView().bringToFront();
+                        webView.getView().setBackgroundColor(Color.WHITE);
+                        playerView = null;
+                    }
+                    callbackContext.success("closeLiveStream Executed!");
+                }
+            }
+        });
     }
 
     private void requestPermissions(CallbackContext callbackContext) {
