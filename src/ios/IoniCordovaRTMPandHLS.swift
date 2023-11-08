@@ -10,9 +10,10 @@ import Combine
     
     var connection: RTMPConnection!
     var stream: RTMPStream!
-    var isFrontCamera: Bool = true
     var hkView: MTHKView!
     var HLSUrl: String = "";
+    var RTMPKey: String = "";
+    var isFrontCamera: Bool = true
     
 
     @objc(previewCamera:)
@@ -31,20 +32,17 @@ import Combine
             print(error)
         }
         
-        
         connection = RTMPConnection()
         connection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self, useCapture:false)
         stream = RTMPStream(connection: connection)
 
-        
         stream.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
-            print("Error attaching audio: (error)")
+            print("Error attaching audio")
         }
         
         stream.attachCamera(AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: (isFrontCamera ? .front : .back))) { error in
-            print("Error attaching camera: (error)")
+            print("Error attaching camera")
         }
-        
         
         webView.isOpaque = false
         webView.backgroundColor = UIColor.clear
@@ -56,58 +54,32 @@ import Combine
         hkView.attachStream(stream)
         viewController.view.insertSubview(hkView, belowSubview: webView)
 
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "CameraPreview started!")
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "previewCamera Executed!")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
     
-    
-    @objc(startBroadcasting:)
-    func startBroadcasting(RTMPSUrl, command: CDVInvokedUrlCommand) {
-        connection.connect(RTMPSUrl)
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Broadcast started successfully!")
-        commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    }
-    
-    
-
-    @objc private func rtmpStatusHandler(notification: Notification) {
-
-        let e = Event.from(notification)
-        guard let data: ASObject = e.data as? ASObject, let code: String = data["code"] as? String else {
-            return
-        }
-        print(code)
-        switch code {
-        case RTMPConnection.Code.connectSuccess.rawValue:=
-            stream.publish("")
-            
-        case RTMPConnection.Code.connectFailed.rawValue, RTMPConnection.Code.connectClosed.rawValue:
-            return
-            
-        default:
-            break
-        }
-    }
-    
-    @objc(stopBroadcasting:)
-    func stopBroadcasting(command: CDVInvokedUrlCommand) {
-        stream.close()
-        connection.close()
+    @objc(closeCameraPreview:)
+    func closeCameraPreview(command: CDVInvokedUrlCommand) {
+        stream = nil
+        connection = nil
         
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Broadcast stopped successfully!")
+         let session = AVAudioSession.sharedInstance()
+         do {
+             try session.setActive(false)
+         } catch {
+             print("Error deactivating audio session")
+         }
+
+
+         hkView?.removeFromSuperview()
+         hkView = nil
+
+         webView.isOpaque = true
+         webView.backgroundColor = UIColor.white
+         viewController.view.backgroundColor = UIColor.white
+
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "closeCameraPreview Executed!")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    }
-    
-    @objc(viewLiveStream:)
-    func viewLiveStream(command: CDVInvokedUrlCommand) {
-        // ...
-    }
-    
-    // Function to check permissions
-    func checkPermissions() -> Bool {
-        let cameraPermission = AVCaptureDevice.authorizationStatus(for: .video)
-        let audioPermission = AVCaptureDevice.authorizationStatus(for: .audio)
-        return cameraPermission == .authorized && audioPermission == .authorized
     }
     
     @objc(swapCamera:)
@@ -129,12 +101,52 @@ import Combine
         }
         
         stream.attachCamera(newCamera) { error in
-            print("attachCamera error " , error)
+            print("Error attaching camera " , error)
         }
         
-
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Camera swapped successfully.")
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "swapCamera Executed!")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    }
+    
+    @objc(startBroadcasting:)
+    func startBroadcasting(command: CDVInvokedUrlCommand) {
+        guard let RTMPSUrl = command.arguments.first as? String else {
+              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid stream URL")
+              commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              return
+        }
+        
+        guard let _RTMPKey = command.arguments.first as? String else {
+              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid stream URL")
+              commandDelegate.send(pluginResult, callbackId: command.callbackId)
+              return
+        }
+        
+        RTMPKey = _RTMPKey
+        connection.connect(RTMPSUrl)
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "startBroadcasting Executed!")
+        commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    }
+    
+    @objc(stopBroadcasting:)
+    func stopBroadcasting(command: CDVInvokedUrlCommand) {
+        stream.close()
+        connection.close()
+        stream = nil
+        connection = nil
+        
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
+        commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    }
+    
+    @objc(viewLiveStream:)
+    func viewLiveStream(command: CDVInvokedUrlCommand) {
+        // ...
+    }
+    
+    @objc(closeLiveStream:)
+    func closeLiveStream(command: CDVInvokedUrlCommand) {
+        // ...
     }
     
     @objc(requestPermissions:)
@@ -161,16 +173,37 @@ import Combine
             AVCaptureDevice.requestAccess(for: mediaType) { granted in
                 if !granted {
                     let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Permission denied")
-                    commandDelegate.send(pluginResult, callbackId: command.callbackId)
+                    self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
                     return
                 }
             }
         }
         
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Permissions granted")
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "requestPermissions Executed!")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
+    }    
+
+    func checkPermissions() -> Bool {
+        let cameraPermission = AVCaptureDevice.authorizationStatus(for: .video)
+        let audioPermission = AVCaptureDevice.authorizationStatus(for: .audio)
+        return cameraPermission == .authorized && audioPermission == .authorized
+    } 
+    
+    @objc private func rtmpStatusHandler(notification: Notification) {
+        let e = Event.from(notification)
+        guard let data: ASObject = e.data as? ASObject, let code: String = data["code"] as? String else {
+            return
+        }
+        print(code)
+        switch code {
+        case RTMPConnection.Code.connectSuccess.rawValue:
+            stream.publish(RTMPKey)
+            
+        case RTMPConnection.Code.connectFailed.rawValue, RTMPConnection.Code.connectClosed.rawValue:
+            return
+            
+        default:
+            break
+        }
     }
-    
-    
-    
 }
