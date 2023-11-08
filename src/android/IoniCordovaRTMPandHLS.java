@@ -36,6 +36,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
     private RtmpStream stream;
     private Camera2Source cameraSource;
+    private HkSurfaceView cameraView;
     private CordovaWebView webView;
     private CordovaInterface cordova;
     private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;
@@ -54,12 +55,15 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 JSONArray CameraOpts = args;
                 this.previewCamera(CameraOpts, callbackContext);
                 return true;
+            case "closeCameraPreview":
+                this.closeCameraPreview(callbackContext);
+                return true;
             case "swapCamera":
                 this.swapCamera(callbackContext);
                 return true;
             case "startBroadcasting":
                 String RTMPUrl = args.getString(0);
-                String RTMPKey = args.getString(0);
+                String RTMPKey = args.getString(1);
                 this.startBroadcasting(RTMPUrl, RTMPKey, callbackContext);
                 return true;
             case "stopBroadcasting":
@@ -68,6 +72,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             case "viewLiveStream":
                 String HLSUrl = args.getString(0);
                 this.viewLiveStream(HLSUrl, callbackContext);
+                return true;
+            case "closeLiveStream":
+                this.closeLiveStream(callbackContext);
                 return true;
             case "requestPermissions":
                 this.requestPermissions(callbackContext);
@@ -91,7 +98,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 cameraSource = new Camera2Source(context, false);
                 stream.attachVideo(cameraSource);
 
-                HkSurfaceView cameraView = new HkSurfaceView(cordova.getActivity());
+                cameraView = new HkSurfaceView(cordova.getActivity());
                 cameraView.attachStream(stream);
 
                 ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
@@ -113,7 +120,25 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 }
 
                 webView.getView().setBackgroundColor(Color.TRANSPARENT);
-                callbackContext.success("Camera preview started!");
+                callbackContext.success("previewCamera Executed!");
+            }
+        });
+    }
+
+    private void closeCameraPreview(CallbackContext callbackContext) {
+          cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(cameraView != null) {
+                    ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+                    if (parentView instanceof FrameLayout) {
+                        FrameLayout frameLayout = (FrameLayout) parentView;
+                        frameLayout.removeView(cameraView);
+                        webView.getView().bringToFront();
+                        cameraView = null;
+                    }
+                    callbackContext.success("closeCameraPreview Executed!");
+                }
             }
         });
     }
@@ -138,18 +163,16 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
        cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Context context = cordova.getActivity().getApplicationContext();
-
-                connection.addEventListener( "rtmpStatus", (event -> {
+                connection.addEventListener("rtmpStatus", (event -> {
                     Map<String, Object> data = EventUtils.INSTANCE.toMap(event);
                     String code = data.get("code").toString();
                     if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.getRawValue())) {
                         stream.publish(RTMPKey, RtmpStream.HowToPublish.LIVE);
+                        callbackContext.success("startBroadcasting Executed!");
                     }
                 }), false);
 
                 connection.connect(RTMPSUrl);
-                Toast.makeText(context, "startBroadcasting", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -158,10 +181,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Context context = cordova.getActivity().getApplicationContext();
                 connection.close();
                 stream.close();
-                Toast.makeText(context, "stopBroadcasting", Toast.LENGTH_SHORT).show();
+                callbackContext.success("stopBroadcasting Executed!");
             }
         });
     }
@@ -212,6 +234,10 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 }
             }
         });
+    }
+
+    private void closeLiveStream(CallbackContext callbackContext) {
+        callbackContext.success("closeLiveStream Executed!");
     }
 
     private void requestPermissions(CallbackContext callbackContext) {

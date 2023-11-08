@@ -6,6 +6,10 @@ IoniCordovaRTMPandHLS.previewCamera = function (CameraOpts, success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'previewCamera', [CameraOpts]);
 };
 
+IoniCordovaRTMPandHLS.closeCameraPreview = function (success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'closeCameraPreview', []);
+};
+
 IoniCordovaRTMPandHLS.swapCamera = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'swapCamera', []);
 };
@@ -20,6 +24,10 @@ IoniCordovaRTMPandHLS.stopBroadcasting = function (success, error) {
 
 IoniCordovaRTMPandHLS.viewLiveStream = function (HLSUrl, success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'viewLiveStream', [HLSUrl]);
+};
+
+IoniCordovaRTMPandHLS.closeLiveStream = function (success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'closeLiveStream', []);
 };
 
 IoniCordovaRTMPandHLS.requestPermissions = function (success, error) {
