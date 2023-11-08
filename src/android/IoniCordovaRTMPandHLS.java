@@ -10,7 +10,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 import androidx.core.content.ContextCompat;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.CordovaInterface;
@@ -210,6 +209,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     Context context = cordova.getActivity().getApplicationContext();
 
                     exoPlayer = new SimpleExoPlayer.Builder(context).build();
+                    exoPlayer.setPlayWhenReady(true);
 
                     playerView = new PlayerView(cordova.getActivity());
                     playerView.setPlayer(exoPlayer);
@@ -218,10 +218,8 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     MediaSource mediaSource = new HlsMediaSource.Factory(new DefaultHttpDataSource.Factory())
                             .createMediaSource(MediaItem.fromUri(Uri.parse(HLSUrl)));
 
-
                     exoPlayer.setMediaSource(mediaSource);
                     exoPlayer.prepare();
-
 
                     ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -239,7 +237,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                         playerView.bringToFront();
                     }
 
-
+                    exoPlayer.play();
                     webView.getView().setBackgroundColor(Color.TRANSPARENT);
 
                     callbackContext.success("viewLiveStream Executed!");
