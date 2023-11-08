@@ -1,9 +1,9 @@
 {
-  "name": "IoniCordovaRTMPandHLS",
+  "name": "IonicCordovaRTMPandHLS",
   "version": "0.0.1",
   "description": "Ionic Cordova Plugin (RTMP/HLS)",
   "cordova": {
-    "id": "cordova-plugin-ionicrtmphls",
+    "id": "cordova.plugin.ionicrtmphls",
     "platforms": [
       "android",
       "ios"
