@@ -11,8 +11,10 @@ import Combine
     var connection: RTMPConnection!
     var stream: RTMPStream!
     var hkView: MTHKView!
-    var HLSUrl: String = "";
-    var RTMPKey: String = "";
+    var avPlayer: AVPlayer!
+    var avPlayerLayer: AVPlayerLayer!
+    var HLSUrl: String = ""
+    var RTMPKey: String = ""
     var isFrontCamera: Bool = true
     
     @objc(previewCamera:)
@@ -141,37 +143,47 @@ import Combine
     
     @objc(viewLiveStream:)
     func viewLiveStream(command: CDVInvokedUrlCommand) {
-     /*   webView.isOpaque = false
+        webView.isOpaque = false
         webView.backgroundColor = UIColor.clear
         viewController.view.backgroundColor = UIColor.clear
 
-        guard let streamURLString = command.arguments.first as? String,
-            let streamURL = URL(string: streamURLString) else {
+        guard let streamURLString = command.arguments[0] as? String else {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid stream URL")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
         }
         
-        if let url = URL(string: streamURL) {
+        if let url = URL(string: streamURLString) {
             
-            let player = AVPlayer(url: url)
-            let playerLayer = AVPlayerLayer(player: player)
-            playerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-            playerLayer.frame = viewController.view.bounds
-            playerLayer.zPosition = -1
-            viewController.view.layer.addSublayer(playerLayer)
+            avPlayer = AVPlayer(url: url)
+            avPlayerLayer = AVPlayerLayer(player: avPlayer)
+            avPlayerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+            avPlayerLayer.frame = viewController.view.bounds
+            avPlayerLayer.zPosition = -1
+            viewController.view.layer.addSublayer(avPlayerLayer)
             
-            player.play()
+            avPlayer.play()
             
 
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
-        } */
+        }
     }
     
     @objc(closeLiveStream:)
     func closeLiveStream(command: CDVInvokedUrlCommand) {
-        // ...
+        avPlayer.pause()
+        avPlayer = nil
+        
+        avPlayerLayer.removeFromSuperlayer()
+        avPlayerLayer = nil
+
+        webView.isOpaque = true
+        webView.backgroundColor = UIColor.white
+        viewController.view.backgroundColor = UIColor.white
+
+        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "closeCameraPreview Executed!")
+        commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
     
     @objc(requestPermissions:)
