@@ -29,6 +29,7 @@ You can find a sample project demonstrating the usage of this plugin at:
 
 ## 🛣 Roadmap
 
+- [ ] Improve communication between native code and javascript (success/error callbacks)
 - [ ] Dynamic Camera Options for Broadcasting Video Settings
 - [ ] Transition from callbacks to Promises and Observables for a more modern API interface.
 - [ ] Ensure the Player and Camera Preview fully match the parent size without including headers and footers.
