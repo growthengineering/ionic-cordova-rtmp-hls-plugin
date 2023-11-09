@@ -33,6 +33,7 @@
             </feature>
         </config-file>
         <!-- 
+            Cordova CLI > 9.0.1
             <podspec>
                 <config>
                     <source url="https://cdn.cocoapods.org/" />
@@ -40,6 +41,7 @@
                 </config>
             </podspec>
         -->
+        <!-- Cordova CLI <= 9.0.1 -->
         <framework src="HaishinKit" type="podspec" spec="~> 1.5.6" />
         <framework src="AVFoundation.framework" weak="true" />
         
