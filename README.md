@@ -2,14 +2,14 @@
 
 # Ionic Cordova RTMP and HLS Plugin
 
-This Cordova plugin enables live broadcasting of the camera feed via RTMP and playback via HLS for both iOS and Android platforms within an Ionic application.
+This Cordova plugin enables live broadcasting of the camera feed via RTMP and playback via HLS for both iOS and Android platforms within an Ionic Cordova application.
 
 ![License](https://img.shields.io/github/license/growthengineering/ionic-cordova-rtmp-hls-plugin)
 
 ## 🚀 Sample Project
 
 You can find a sample project demonstrating the usage of this plugin at:
-[SAMPLE PROJECT](https://github.com/joaolourencoge/ionic-cordova-rtmp-hls-sample-project)
+[ionic-cordova-rtmp-hls-sample-project](https://github.com/joaolourencoge/ionic-cordova-rtmp-hls-sample-project)
 
 ## 🛣 Roadmap
 
