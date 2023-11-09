@@ -130,6 +130,8 @@ ionicRtmpHls.closeLiveStream(successCallback, errorCallback);
 This plugin supports:
 - Android 7.0 (Nougat) and above
 - iOS 12 and above
+- Cordova Android 10.0.1 and above
+- Cordova iOS 6.2.0 and above
 
 ## 🔒 License
 
