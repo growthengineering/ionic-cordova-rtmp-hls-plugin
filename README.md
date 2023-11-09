@@ -6,6 +6,9 @@ This Cordova plugin enables live broadcasting of the camera feed via RTMP and pl
 
 ![License](https://img.shields.io/github/license/growthengineering/ionic-cordova-rtmp-hls-plugin)
 
+
+
+
 ## 🚀 Sample Project
 
 You can find a sample project demonstrating the usage of this plugin at:
