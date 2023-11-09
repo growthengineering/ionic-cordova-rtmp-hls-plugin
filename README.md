@@ -1,4 +1,4 @@
-![Ionic Cordova RTMP and HLS Plugin Header Image](path/to/your/header-image.png)
+![Ionic Cordova RTMP and HLS Plugin Header Image](https://github.com/growthengineering/ionic-cordova-rtmp-hls-plugin/assets/92361796/4ab394ee-5bda-471e-bc9a-567c8589ff7a)
 
 # Ionic Cordova RTMP and HLS Plugin
 
