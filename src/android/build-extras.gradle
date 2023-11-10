@@ -1,0 +1,10 @@
+allprojects {
+  repositories {
+    maven { url 'https://jitpack.io' }
+  }
+}
+
+dependencies {
+  implementation 'com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4'
+  implementation 'com.google.android.exoplayer:exoplayer:2.19.1'
+}
