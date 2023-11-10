@@ -11,7 +11,7 @@ This Cordova plugin enables live broadcasting of the camera feed via RTMP and pl
 
 ### Broadcasting
 - 📷 **Preview Camera Feed:** Preview the camera feed.
-- 🔄 **Swap Camera:** Swap between different cameras.
+- 🔄 **Swap Camera:** Swap between different cameras (front/back).
 - 🚪 **Close Camera Preview:** Close the camera preview.
 - ▶️ **Start RTMP Broadcasting:** Start broadcasting the camera feed via RTMP.
 - ⏹️ **Stop RTMP Broadcasting:** Stop the RTMP broadcast.
@@ -53,17 +53,15 @@ cordova plugin add https://github.com/growthengineering/ionic-cordova-rtmp-hls-p
 
 ## 🛠 Usage
 
-Ensure you have the necessary permissions before attempting to broadcast or view streams:
+Access to the cordova package in your Ionic app via window property:
 
 ```javascript
 const ionicRtmpHls = (<any>window).cordova.plugin.ionicrtmphls;
-
-ionicRtmpHls.requestPermissions(successCallback, errorCallback);
 ```
 
 ### 🎨 Styling
 
-Include the following styles in your global stylesheet to ensure the player and camera have the correct background when active:
+Include the following styles in your Ionic global stylesheet to ensure the player and camera have the correct background when active:
 
 ```css
 body.show-player,
@@ -82,13 +80,19 @@ body.show-camera {
 
 ### 📺 Broadcasting
 
+Request necessary permissions before attempting to broadcast:
+
+```javascript
+ionicRtmpHls.requestPermissions(successCallback, errorCallback);
+```
+
 To preview the camera feed:
 
 ```javascript
 ionicRtmpHls.previewCamera(CameraOpts, successCallback, errorCallback);
 ```
 
-To swap the camera:
+To swap the camera (front/back):
 
 ```javascript
 ionicRtmpHls.swapCamera(successCallback, errorCallback);
