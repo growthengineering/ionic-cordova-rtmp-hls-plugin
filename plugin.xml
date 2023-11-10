@@ -33,17 +33,12 @@
                 <param name="ios-package" value="IoniCordovaRTMPandHLS" />
             </feature>
         </config-file>
-        <!-- 
-            Cordova CLI > 9.0.1
-            <podspec>
-                <config>
-                    <source url="https://cdn.cocoapods.org/" />
-                    <pod name="HaishinKit" spec="~> 1.5.6" />
-                </config>
-            </podspec>
-        -->
-        <!-- Cordova CLI <= 9.0.1 -->
-        <framework src="HaishinKit" type="podspec" spec="~> 1.5.6" />
+        <podspec>
+            <config>
+                <source url="https://cdn.cocoapods.org/" />
+                <pod name="HaishinKit" spec="~> 1.5.6" />
+            </config>
+        </podspec>
         <framework src="AVFoundation.framework" weak="true" />
         
         <source-file src="src/ios/IoniCordovaRTMPandHLS.swift" />
