@@ -139,6 +139,8 @@ This plugin supports:
 - Cordova Android 10.0.1 and above
 - Cordova iOS 6.2.0 and above
 
+🟡 If you are using a version of Cordova CLI <= 9.0.1 And/Or Cordova iOS <= 6.2.0 you should use the following branch: ```cordova-cli-9-and-below ```
+
 ## 🔒 License
 
 MIT License
