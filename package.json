@@ -1,0 +1,34 @@
+{
+  "name": "IonicCordovaRTMPandHLS",
+  "version": "0.0.1",
+  "description": "Ionic Cordova Plugin (RTMP/HLS)",
+  "cordova": {
+    "id": "cordova.plugin.ionicrtmphls",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/growthengineering/ionic-cordova-rtmp-hls-plugin.git"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios",
+    "ionic",
+    "ionic rtmp",
+    "ionic hls",
+    "cordova rtmp",
+    "cordova hls",
+    "ionic cordova rtmp",
+    "ionic cordova hls"
+  ],
+  "author": "Growth Engineering Technologies",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/growthengineering/ionic-cordova-rtmp-hls-plugin/issues"
+  },
+  "homepage": "https://github.com/growthengineering/ionic-cordova-rtmp-hls-plugin#readme"
+}

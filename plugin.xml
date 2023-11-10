@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="cordova-plugin-ionicrtmphls" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>IonicCordovaRTMPandHLS</name>
+
+    <js-module name="ionicrtmphls" src="www/IoniCordovaRTMPandHLS.js">
+        <clobbers target="cordova.plugin.ionicrtmphls" />
+    </js-module>
+
+    <platform name="android">
+        <source-file src="src/android/IoniCordovaRTMPandHLS.java" target-dir="src/cordova/plugin/ionicrtmphls/" />
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="IoniCordovaRTMPandHLS">
+                <param name="android-package" value="cordova.plugin.ionicrtmphls.IoniCordovaRTMPandHLS" />
+            </feature>
+        </config-file>
+
+        <config-file parent="/manifest" target="AndroidManifest.xml">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-feature android:name="android.hardware.camera" />
+        </config-file>
+        
+        <framework src="com.google.android.exoplayer:exoplayer:2.19.1" /> 
+        <framework src="com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4" />
+        <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
+
+    </platform>
+
+    <platform name="ios">
+        <config-file parent="/*" target="config.xml">
+            <feature name="IoniCordovaRTMPandHLS">
+                <param name="ios-package" value="IoniCordovaRTMPandHLS" />
+            </feature>
+        </config-file>
+        <!-- 
+            Cordova CLI > 9.0.1
+            <podspec>
+                <config>
+                    <source url="https://cdn.cocoapods.org/" />
+                    <pod name="HaishinKit" spec="~> 1.5.6" />
+                </config>
+            </podspec>
+        -->
+        <!-- Cordova CLI <= 9.0.1 -->
+        <framework src="HaishinKit" type="podspec" spec="~> 1.5.6" />
+        <framework src="AVFoundation.framework" weak="true" />
+        
+        <source-file src="src/ios/IoniCordovaRTMPandHLS.swift" />
+        
+        <config-file parent="NSCameraUsageDescription" target="*-Info.plist">
+            <string>Access camera to stream live</string>
+        </config-file>
+        <config-file parent="NSMicrophoneUsageDescription" target="*-Info.plist">
+            <string>Access microphone to stream live</string>
+        </config-file>
+    </platform>
+</plugin>
