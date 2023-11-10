@@ -1,4 +1,4 @@
-var exec = require('cordova/exec');
+const exec = require('cordova/exec');
 
 var IoniCordovaRTMPandHLS = {};
 

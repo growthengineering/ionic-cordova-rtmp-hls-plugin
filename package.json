@@ -16,10 +16,17 @@
   "keywords": [
     "ecosystem:cordova",
     "cordova-android",
-    "cordova-ios"
+    "cordova-ios",
+    "ionic",
+    "ionic rtmp",
+    "ionic hls",
+    "cordova rtmp",
+    "cordova hls",
+    "ionic cordova rtmp",
+    "ionic cordova hls"
   ],
-  "author": "GrowthEngineering",
-  "license": "ISC",
+  "author": "Growth Engineering Technologies",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/growthengineering/ionic-cordova-rtmp-hls-plugin/issues"
   },
