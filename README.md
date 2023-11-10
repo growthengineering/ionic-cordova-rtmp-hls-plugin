@@ -10,6 +10,7 @@ This Cordova plugin enables live broadcasting of the camera feed via RTMP and pl
 ## 💡 Features
 
 ### Broadcasting
+- 🎬 **Request Permissions:** Request the Camera and Microphone permissions.
 - 📷 **Preview Camera Feed:** Preview the camera feed.
 - 🔄 **Swap Camera:** Swap between different cameras (front/back).
 - 🚪 **Close Camera Preview:** Close the camera preview.
@@ -17,7 +18,7 @@ This Cordova plugin enables live broadcasting of the camera feed via RTMP and pl
 - ⏹️ **Stop RTMP Broadcasting:** Stop the RTMP broadcast.
 
 ### Playback
-- 📺 **View HLS Stream:** View an HLS stream.
+- 📺 **View HLS Stream:** Playback the HLS stream.
 - 🚫 **Close HLS Stream:** Close the HLS stream playback.
 
 
