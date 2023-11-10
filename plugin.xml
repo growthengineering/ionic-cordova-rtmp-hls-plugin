@@ -28,12 +28,31 @@
     </platform>
 
     <platform name="ios">
-        <config-file parent="/" target="config.xml">
+        <config-file parent="/*" target="config.xml">
             <feature name="IoniCordovaRTMPandHLS">
                 <param name="ios-package" value="IoniCordovaRTMPandHLS" />
             </feature>
         </config-file>
-
-        <source-file src="src/ios/IoniCordovaRTMPandHLS.m" />
+        <!-- 
+            Cordova CLI > 9.0.1
+            <podspec>
+                <config>
+                    <source url="https://cdn.cocoapods.org/" />
+                    <pod name="HaishinKit" spec="~> 1.5.6" />
+                </config>
+            </podspec>
+        -->
+        <!-- Cordova CLI <= 9.0.1 -->
+        <framework src="HaishinKit" type="podspec" spec="~> 1.5.6" />
+        <framework src="AVFoundation.framework" weak="true" />
+        
+        <source-file src="src/ios/IoniCordovaRTMPandHLS.swift" />
+        
+        <config-file parent="NSCameraUsageDescription" target="*-Info.plist">
+            <string>Access camera to stream live</string>
+        </config-file>
+        <config-file parent="NSMicrophoneUsageDescription" target="*-Info.plist">
+            <string>Access microphone to stream live</string>
+        </config-file>
     </platform>
 </plugin>
