@@ -186,20 +186,23 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
     private void stopBroadcasting(CallbackContext callbackContext) {
         new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if(connection != null) {
                 connection.close();
-                stream.close();
                 connection = null;
+            }
+            if(stream != null) {
+                stream.close();
                 stream = null;
-                return null;
             }
+            return null;
+        }
 
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                callbackContext.success("stopBroadcasting Executed!");
-            }
-        }.execute();
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            callbackContext.success("stopBroadcasting Executed!");
+        }}.execute();
     }
 
     private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {

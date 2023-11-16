@@ -135,14 +135,21 @@ import Combine
     
     @objc(stopBroadcasting:)
     func stopBroadcasting(command: CDVInvokedUrlCommand) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.stream.close()
-            self.connection.close()
+       DispatchQueue.main.async { [weak self] in
+           guard let self = self else { return }
+           if let stream = self.stream {
+               stream.close()
+               self.stream = nil
+           }
+
+           if let connection = self.connection {
+               connection.close()
+               self.connection = nil
+           }
             
-            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
-            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-        }
+           let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
+           self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+       }
     }
     
     @objc(viewLiveStream:)
