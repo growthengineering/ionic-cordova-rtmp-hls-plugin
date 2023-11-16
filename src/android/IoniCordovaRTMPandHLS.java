@@ -21,6 +21,7 @@ import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.haishinkit.event.EventUtils;
@@ -214,6 +215,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     playerView = new PlayerView(cordova.getActivity());
                     playerView.setPlayer(exoPlayer);
                     playerView.setUseController(false);
+                    playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
 
                     MediaSource mediaSource = new HlsMediaSource.Factory(new DefaultHttpDataSource.Factory())
                             .createMediaSource(MediaItem.fromUri(Uri.parse(HLSUrl)));
