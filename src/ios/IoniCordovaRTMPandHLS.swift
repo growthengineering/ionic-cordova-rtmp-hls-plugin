@@ -33,10 +33,18 @@ import Combine
             print(error)
         }
         
+        hkView = MTHKView(frame: webView.bounds)
+        hkView.layer.zPosition = 0;
+        webView.layer.zPosition = 1;
+        hkView.videoGravity = AVLayerVideoGravity.resizeAspectFill
+        
         connection = RTMPConnection()
         connection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self, useCapture:false)
         stream = RTMPStream(connection: connection)
-
+        
+        let videoSettings = VideoCodecSettings(videoSize: VideoSize(width: Int32(hkView.frame.width), height: Int32(hkView.frame.height)));
+        stream.videoSettings = videoSettings;
+        
         stream.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
             print("Error attaching audio")
         }
@@ -48,10 +56,6 @@ import Combine
         webView.isOpaque = false
         webView.backgroundColor = UIColor.clear
         viewController.view.backgroundColor = UIColor.clear
-        hkView = MTHKView(frame: webView.bounds)
-        hkView.layer.zPosition = 0;
-        webView.layer.zPosition = 1;
-        hkView.videoGravity = AVLayerVideoGravity.resizeAspectFill
         hkView.attachStream(stream)
         viewController.view.insertSubview(hkView, belowSubview: webView)
 
@@ -131,14 +135,21 @@ import Combine
     
     @objc(stopBroadcasting:)
     func stopBroadcasting(command: CDVInvokedUrlCommand) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.stream.close()
-            self.connection.close()
+       DispatchQueue.main.async { [weak self] in
+           guard let self = self else { return }
+           if let stream = self.stream {
+               stream.close()
+               self.stream = nil
+           }
+
+           if let connection = self.connection {
+               connection.close()
+               self.connection = nil
+           }
             
-            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
-            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-        }
+           let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
+           self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+       }
     }
     
     @objc(viewLiveStream:)
