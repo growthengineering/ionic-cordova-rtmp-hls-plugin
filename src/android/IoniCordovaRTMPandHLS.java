@@ -21,6 +21,7 @@ import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.haishinkit.event.EventUtils;
@@ -185,20 +186,23 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
     private void stopBroadcasting(CallbackContext callbackContext) {
         new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
+        @Override
+        protected Void doInBackground(Void... voids) {
+            if(connection != null) {
                 connection.close();
-                stream.close();
                 connection = null;
+            }
+            if(stream != null) {
+                stream.close();
                 stream = null;
-                return null;
             }
+            return null;
+        }
 
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                callbackContext.success("stopBroadcasting Executed!");
-            }
-        }.execute();
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            callbackContext.success("stopBroadcasting Executed!");
+        }}.execute();
     }
 
     private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {
@@ -214,6 +218,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     playerView = new PlayerView(cordova.getActivity());
                     playerView.setPlayer(exoPlayer);
                     playerView.setUseController(false);
+                    playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
 
                     MediaSource mediaSource = new HlsMediaSource.Factory(new DefaultHttpDataSource.Factory())
                             .createMediaSource(MediaItem.fromUri(Uri.parse(HLSUrl)));
