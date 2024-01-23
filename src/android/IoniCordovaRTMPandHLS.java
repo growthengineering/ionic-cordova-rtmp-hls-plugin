@@ -180,7 +180,11 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     }
                 }), false);
 
-                connection.connect(RTMPSUrl);
+                try {
+                    connection.connect(RTMPSUrl);
+                } catch {
+                    callbackContext.error("Failed to startBroadcasting");
+                }
             }
         });
     }

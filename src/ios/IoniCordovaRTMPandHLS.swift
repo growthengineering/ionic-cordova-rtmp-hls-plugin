@@ -115,22 +115,29 @@ import Combine
     
     @objc(startBroadcasting:)
     func startBroadcasting(command: CDVInvokedUrlCommand) {
-        guard let RTMPSUrl = command.arguments[0] as? String else {
-              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL")
-              commandDelegate.send(pluginResult, callbackId: command.callbackId)
-              return
-        }
-        
-        guard let _RTMPKey = command.arguments[1] as? String else {
-              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid Key")
-              commandDelegate.send(pluginResult, callbackId: command.callbackId)
-              return
-        }
+        do {
+            guard let RTMPSUrl = command.arguments[0] as? String else {
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL")
+                commandDelegate.send(pluginResult, callbackId: command.callbackId)
+                return
+            }
+            
+            guard let _RTMPKey = command.arguments[1] as? String else {
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid Key")
+                commandDelegate.send(pluginResult, callbackId: command.callbackId)
+                return
+            }
 
-        RTMPKey = _RTMPKey
-        connection.connect(RTMPSUrl)
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "startBroadcasting Executed!")
-        commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            RTMPKey = _RTMPKey
+            connection.connect(RTMPSUrl)
+
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "startBroadcasting Executed!")
+            commandDelegate.send(pluginResult, callbackId: command.callbackId)
+
+        } catch {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Failed to startBroadcasting")
+            commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
     }
     
     @objc(stopBroadcasting:)
