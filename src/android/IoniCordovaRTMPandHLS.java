@@ -44,7 +44,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;
     private CallbackContext savedCallbackContext;
 
-  @Override
+    @Override
     public void initialize(final CordovaInterface _cordova, final CordovaWebView _webView) {
         super.initialize(_cordova, _webView);
         webView = _webView;
@@ -278,11 +278,11 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void requestPermissions(CallbackContext callbackContext) {
-      savedCallbackContext = callbackContext;
+        savedCallbackContext = callbackContext;
 
-      String[] permissions = {
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO
+        String[] permissions = {
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.RECORD_AUDIO
         };
 
         boolean hasPermissions = true;
@@ -300,30 +300,30 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         }
     }
 
-  @Override
-  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
-    if (requestCode == 1) {
-      boolean allPermissionsGranted = true;
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        if (requestCode == 1) {
+        boolean allPermissionsGranted = true;
 
-      for (int result : grantResults) {
-        if (result != PackageManager.PERMISSION_GRANTED) {
-          allPermissionsGranted = false;
-          break;
+        for (int result : grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) {
+            allPermissionsGranted = false;
+            break;
+            }
         }
-      }
 
-      if (allPermissionsGranted) {
-        // Call success in the onRequestPermissionResult
-        savedCallbackContext.success("Permissions granted!");
-      } else {
-        // Call error in the onRequestPermissionResult
-        savedCallbackContext.error("Permissions denied!");
-      }
-      // Reset the stored callback context after using it
-      savedCallbackContext = null;
-    } else {
-      // Handle other permission requests if any
-      super.onRequestPermissionResult(requestCode, permissions, grantResults);
+        if (allPermissionsGranted) {
+            // Call success in the onRequestPermissionResult
+            savedCallbackContext.success("Permissions granted!");
+        } else {
+            // Call error in the onRequestPermissionResult
+            savedCallbackContext.error("Permissions denied!");
+        }
+        // Reset the stored callback context after using it
+        savedCallbackContext = null;
+        } else {
+        // Handle other permission requests if any
+        super.onRequestPermissionResult(requestCode, permissions, grantResults);
+        }
     }
-  }
 }
