@@ -127,6 +127,12 @@ import Combine
                 commandDelegate.send(pluginResult, callbackId: command.callbackId)
                 return
             }
+            
+            guard connection != nil else {
+               let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Connection Failed")
+               commandDelegate.send(pluginResult, callbackId: command.callbackId)
+               return
+            }
 
             RTMPKey = _RTMPKey
             connection.connect(RTMPSUrl)
