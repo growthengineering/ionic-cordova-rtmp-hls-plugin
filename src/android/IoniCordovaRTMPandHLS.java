@@ -42,6 +42,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private CordovaWebView webView;
     private CordovaInterface cordova;
     private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;
+    private CallbackContext savedCallbackContext;
 
     @Override
     public void initialize(final CordovaInterface _cordova, final CordovaWebView _webView) {
@@ -90,38 +91,43 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             @SuppressLint("ResourceAsColor")
             @Override
             public void run() {
-                Context context = cordova.getActivity().getApplicationContext();
-            
-                connection = new RtmpConnection();
-                stream = new RtmpStream(connection);
-                stream.attachAudio(new AudioRecordSource(context, false));
+                try {
+                    Context context = cordova.getActivity().getApplicationContext();
 
-                cameraSource = new Camera2Source(context, false);
-                stream.attachVideo(cameraSource);
+                    connection = new RtmpConnection();
+                    stream = new RtmpStream(connection);
+                    stream.attachAudio(new AudioRecordSource(context, false));
 
-                cameraView = new HkSurfaceView(cordova.getActivity());
-                cameraView.attachStream(stream);
+                    cameraSource = new Camera2Source(context, false);
+                    stream.attachVideo(cameraSource);
 
-                ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                );
-                cameraView.setLayoutParams(layoutParams);
+                    cameraView = new HkSurfaceView(cordova.getActivity());
+                    cameraView.attachStream(stream);
 
-                cameraSource.open(currentCameraFacing);
+                    ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                    );
+                    cameraView.setLayoutParams(layoutParams);
 
-                ViewGroup parentView = (ViewGroup) webView.getView().getParent();
-                if (parentView instanceof FrameLayout) {
-                    FrameLayout frameLayout = (FrameLayout) parentView;
-                    frameLayout.addView(cameraView, 0);
-                    webView.getView().bringToFront();
-                } else {
-                    cordova.getActivity().addContentView(cameraView, layoutParams);
-                    cameraView.bringToFront();
+                    cameraSource.open(currentCameraFacing);
+
+                    ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+                    if (parentView instanceof FrameLayout) {
+                        FrameLayout frameLayout = (FrameLayout) parentView;
+                        frameLayout.addView(cameraView, 0);
+                        webView.getView().bringToFront();
+                    } else {
+                        cordova.getActivity().addContentView(cameraView, layoutParams);
+                        cameraView.bringToFront();
+                    }
+
+                    webView.getView().setBackgroundColor(Color.TRANSPARENT);
+                    callbackContext.success("previewCamera Executed!");
+
+                } catch (Exception ex) {
+                    callbackContext.error("Failed to previewCamera");
                 }
-
-                webView.getView().setBackgroundColor(Color.TRANSPARENT);
-                callbackContext.success("previewCamera Executed!");
             }
         });
     }
@@ -170,16 +176,20 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
        cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                connection.addEventListener("rtmpStatus", (event -> {
-                    Map<String, Object> data = EventUtils.INSTANCE.toMap(event);
-                    String code = data.get("code").toString();
-                    if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.getRawValue())) {
-                        stream.publish(RTMPKey, RtmpStream.HowToPublish.LIVE);
-                        callbackContext.success("startBroadcasting Executed!");
-                    }
-                }), false);
+                try {
+                    connection.addEventListener("rtmpStatus", (event -> {
+                        Map<String, Object> data = EventUtils.INSTANCE.toMap(event);
+                        String code = data.get("code").toString();
+                        if (code.equals(RtmpConnection.Code.CONNECT_SUCCESS.getRawValue())) {
+                            stream.publish(RTMPKey, RtmpStream.HowToPublish.LIVE);
+                            callbackContext.success("startBroadcasting Executed!");
+                        }
+                    }), false);
 
-                connection.connect(RTMPSUrl);
+                    connection.connect(RTMPSUrl);
+                } catch (Exception ex) {
+                    callbackContext.error("Failed to startBroadcasting");
+                }
             }
         });
     }
@@ -246,8 +256,8 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     webView.getView().setBackgroundColor(Color.TRANSPARENT);
 
                     callbackContext.success("viewLiveStream Executed!");
-                }catch (Exception ex) {
-                    ex.printStackTrace();
+                } catch (Exception ex) {
+                    callbackContext.error("Failed to viewLiveStream");
                 }
             }
         });
@@ -277,9 +287,11 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     }
 
     private void requestPermissions(CallbackContext callbackContext) {
+        savedCallbackContext = callbackContext;
+
         String[] permissions = {
-                Manifest.permission.CAMERA,
-                Manifest.permission.RECORD_AUDIO
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.RECORD_AUDIO
         };
 
         boolean hasPermissions = true;
@@ -289,10 +301,40 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                 break;
             }
         }
-        
+
         if (!hasPermissions) {
             cordova.requestPermissions(this, 1, permissions);
+        } else {
+            savedCallbackContext.success("requestPermissions Executed!");
         }
-        callbackContext.success("requestPermissions Executed!");
+    }
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        if (requestCode == 1) {
+            boolean allPermissionsGranted = true;
+
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                allPermissionsGranted = false;
+                break;
+                }
+            }
+
+            if (allPermissionsGranted) {
+                // Call success in the onRequestPermissionResult
+                savedCallbackContext.success("Permissions granted!");
+            } else {
+                // Call error in the onRequestPermissionResult
+                savedCallbackContext.error("Permissions denied!");
+            }
+
+            // Reset the stored callback context after using it
+            savedCallbackContext = null;
+
+        } else {
+            // Handle other permission requests if any
+            super.onRequestPermissionResult(requestCode, permissions, grantResults);
+        }
     }
 }

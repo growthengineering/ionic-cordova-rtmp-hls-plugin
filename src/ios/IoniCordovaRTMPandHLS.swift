@@ -115,22 +115,35 @@ import Combine
     
     @objc(startBroadcasting:)
     func startBroadcasting(command: CDVInvokedUrlCommand) {
-        guard let RTMPSUrl = command.arguments[0] as? String else {
-              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL")
-              commandDelegate.send(pluginResult, callbackId: command.callbackId)
-              return
-        }
-        
-        guard let _RTMPKey = command.arguments[1] as? String else {
-              let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid Key")
-              commandDelegate.send(pluginResult, callbackId: command.callbackId)
-              return
-        }
+        do {
+            guard let RTMPSUrl = command.arguments[0] as? String else {
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL")
+                commandDelegate.send(pluginResult, callbackId: command.callbackId)
+                return
+            }
+            
+            guard let _RTMPKey = command.arguments[1] as? String else {
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid Key")
+                commandDelegate.send(pluginResult, callbackId: command.callbackId)
+                return
+            }
+            
+            guard connection != nil else {
+               let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Connection Failed")
+               commandDelegate.send(pluginResult, callbackId: command.callbackId)
+               return
+            }
 
-        RTMPKey = _RTMPKey
-        connection.connect(RTMPSUrl)
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "startBroadcasting Executed!")
-        commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            RTMPKey = _RTMPKey
+            connection.connect(RTMPSUrl)
+
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "startBroadcasting Executed!")
+            commandDelegate.send(pluginResult, callbackId: command.callbackId)
+
+        } catch {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Failed to startBroadcasting")
+            commandDelegate.send(pluginResult, callbackId: command.callbackId)
+        }
     }
     
     @objc(stopBroadcasting:)
@@ -207,29 +220,45 @@ import Combine
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
         }
-        
 
         var permissionsToRequest: [AVMediaType] = []
+        
         if cameraStatus == .notDetermined {
             permissionsToRequest.append(AVMediaType.video)
         }
+        
         if microphoneStatus == .notDetermined {
             permissionsToRequest.append(AVMediaType.audio)
         }
-        
+
+        guard !permissionsToRequest.isEmpty else {
+            // Permissions are already denied for both
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Permission denied for both permissions")
+            commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            return
+        }
+
+        var grantedPermissions: [AVMediaType] = []
+
+        // Request permissions sequentially
         for mediaType in permissionsToRequest {
             AVCaptureDevice.requestAccess(for: mediaType) { granted in
-                if !granted {
-                    let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Permission denied")
+                if granted {
+                    grantedPermissions.append(mediaType)
+                }
+
+                if grantedPermissions.count == permissionsToRequest.count {
+                    // All requested permissions are granted
+                    let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "Permissions granted for \(grantedPermissions)")
                     self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
-                    return
+                } else if !granted {
+                    // At least one permission is denied
+                    let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Permission denied for \(mediaType)")
+                    self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
                 }
             }
         }
-        
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "requestPermissions Executed!")
-        commandDelegate.send(pluginResult, callbackId: command.callbackId)
-    }    
+    }
 
     func checkPermissions() -> Bool {
         let cameraPermission = AVCaptureDevice.authorizationStatus(for: .video)
