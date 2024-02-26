@@ -20,6 +20,14 @@
             <uses-permission android:name="android.permission.RECORD_AUDIO" />
             <uses-feature android:name="android.hardware.camera" />
         </config-file>
+
+         <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <meta-data android:name="com.android.graphics.injectLayers.enable" android:value="false" tools:replace="android:value" />
+        </config-file>
+
+        <edit-config file="AndroidManifest.xml" mode="merge" target="/manifest">
+            <manifest xmlns:tools="http://schemas.android.com/tools" />
+        </edit-config>
         
         <framework src="com.google.android.exoplayer:exoplayer:2.19.1" /> 
         <framework src="com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4" />
