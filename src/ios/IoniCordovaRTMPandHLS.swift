@@ -42,8 +42,17 @@ import Combine
         connection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self, useCapture:false)
         stream = RTMPStream(connection: connection)
         
-        let videoSettings = VideoCodecSettings(videoSize: VideoSize(width: Int32(hkView.frame.width), height: Int32(hkView.frame.height)));
-        stream.videoSettings = videoSettings;
+        stream.frameRate = 60;
+        stream.sessionPreset = .hd1920x1080;
+        stream.videoSettings.videoSize = .init(width: 1080, height: 1920);
+        stream.videoSettings.profileLevel = kVTProfileLevel_H264_High_AutoLevel as String;
+        stream.videoSettings.bitRate = 8500 * 1000;
+        stream.videoSettings.maxKeyFrameIntervalDuration = 2;
+        stream.videoSettings.scalingMode = .trim;
+        stream.videoSettings.bitRateMode = .average;
+        stream.videoSettings.isHardwareEncoderEnabled = true;
+        stream.videoSettings.allowFrameReordering = false;
+        stream.audioSettings.bitRate = 96*1000;
         
         stream.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
             print("Error attaching audio")
