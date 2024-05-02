@@ -29,8 +29,12 @@ import com.haishinkit.media.AudioRecordSource;
 import com.haishinkit.media.Camera2Source;
 import com.haishinkit.rtmp.RtmpConnection;
 import com.haishinkit.rtmp.RtmpStream;
+import com.haishinkit.codec.CodecOption;
+import com.haishinkit.codec.VideoCodec;
 import com.haishinkit.view.HkSurfaceView;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
