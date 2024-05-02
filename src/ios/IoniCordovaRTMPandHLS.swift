@@ -4,7 +4,7 @@ import HaishinKit
 import AVFoundation
 import Logboard
 import Combine
-
+import VideoToolbox
 
 @objc(IoniCordovaRTMPandHLS) class IoniCordovaRTMPandHLS: CDVPlugin {
     
