@@ -50,7 +50,7 @@ import VideoToolbox
         stream.videoSettings.maxKeyFrameIntervalDuration = 2;
         stream.videoSettings.scalingMode = .trim;
         stream.videoSettings.bitRateMode = .average;
-        stream.videoSettings.isHardwareEncoderEnabled = true;
+        stream.videoSettings.isHardwareEncoderEnabled = false;
         stream.videoSettings.allowFrameReordering = false;
         stream.audioSettings.bitRate = 96*1000;
         
