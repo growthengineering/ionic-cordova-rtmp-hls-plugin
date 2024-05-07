@@ -29,8 +29,12 @@ import com.haishinkit.media.AudioRecordSource;
 import com.haishinkit.media.Camera2Source;
 import com.haishinkit.rtmp.RtmpConnection;
 import com.haishinkit.rtmp.RtmpStream;
+import com.haishinkit.codec.CodecOption;
+import com.haishinkit.codec.VideoCodec;
 import com.haishinkit.view.HkSurfaceView;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
@@ -96,6 +100,20 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
                     connection = new RtmpConnection();
                     stream = new RtmpStream(connection);
+                    
+                    stream.getVideoSetting().setFrameRate(60);
+                    List<CodecOption> options = new ArrayList<>();
+                    CodecOption profileOption = new CodecOption("profile", "high");
+                    options.add(profileOption);
+                    CodecOption levelOption = new CodecOption("level", "5.1");
+                    options.add(levelOption);
+                    stream.getVideoSetting().setOptions(options);
+                    stream.getVideoSetting().setBitRate(8500 * 1000);
+                    stream.getVideoSetting().setIFrameInterval(2);
+                    stream.getVideoSetting().setWidth(1080);
+                    stream.getVideoSetting().setHeight(1920);
+                    stream.getAudioSetting().setBitRate(96 * 1000);
+
                     stream.attachAudio(new AudioRecordSource(context, false));
 
                     cameraSource = new Camera2Source(context, false);
