@@ -42,17 +42,7 @@ import VideoToolbox
         connection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self, useCapture:false)
         stream = RTMPStream(connection: connection)
         
-        stream.frameRate = 60;
-        stream.sessionPreset = .hd1920x1080;
-        stream.videoSettings.videoSize = .init(width: 1080, height: 1920);
-        stream.videoSettings.profileLevel = kVTProfileLevel_H264_High_AutoLevel as String;
-        stream.videoSettings.bitRate = 8500 * 1000;
-        stream.videoSettings.maxKeyFrameIntervalDuration = 2;
-        stream.videoSettings.scalingMode = .trim;
-        stream.videoSettings.bitRateMode = .average;
-        stream.videoSettings.isHardwareEncoderEnabled = false;
-        stream.videoSettings.allowFrameReordering = false;
-        stream.audioSettings.bitRate = 96*1000;
+        setVideoSettings();
         
         stream.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
             print("Error attaching audio")
@@ -114,6 +104,8 @@ import VideoToolbox
             return
         }
         
+        setVideoSettings();
+
         stream.attachCamera(newCamera) { error in
             print("Error attaching camera " , error)
         }
@@ -291,5 +283,19 @@ import VideoToolbox
         default:
             break
         }
+    }
+
+    func setVideoSettings() {
+        stream.frameRate = 60;
+        stream.videoOrientation = .portrait;
+        stream.videoSettings.videoSize = .init(width: 1080, height: 1920);
+        stream.videoSettings.profileLevel = kVTProfileLevel_H264_High_AutoLevel as String;
+        stream.videoSettings.bitRate = 8500 * 1000;
+        stream.videoSettings.maxKeyFrameIntervalDuration = 2;
+        stream.videoSettings.scalingMode = .trim;
+        stream.videoSettings.bitRateMode = .average;
+        stream.videoSettings.isHardwareEncoderEnabled = false;
+        stream.videoSettings.allowFrameReordering = false;
+        stream.audioSettings.bitRate = 96*1000;
     }
 }
