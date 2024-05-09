@@ -209,7 +209,9 @@ import AmazonIVSPlayer
     
     @objc(closeLiveStream:)
     func closeLiveStream(command: CDVInvokedUrlCommand) {
-        avPlayer.pause()
+        if let _player = avPlayer {
+            _player.pause()
+        }
         avPlayer = nil
         
         avPlayerLayer.removeFromSuperlayer()
