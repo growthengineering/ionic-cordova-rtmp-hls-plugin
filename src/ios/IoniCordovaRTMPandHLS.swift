@@ -199,7 +199,7 @@ import AmazonIVSPlayer
             viewController.view.layer.addSublayer(avPlayerLayer)
             avPlayer.addObserver(self, forKeyPath: #keyPath(IVSPlayer.state), options: [.new], context: nil)
             avPlayer.load(url)
-            //avPlayer.play()
+            avPlayer.play()
             
 
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
