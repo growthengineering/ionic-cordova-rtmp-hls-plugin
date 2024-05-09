@@ -214,7 +214,9 @@ import AmazonIVSPlayer
         }
         avPlayer = nil
         
-        avPlayerLayer.removeFromSuperlayer()
+        if let _playerLayer = avPlayerLayer {
+            _playerLayer.removeFromSuperlayer()
+        }
         avPlayerLayer = nil
 
         webView.isOpaque = true
