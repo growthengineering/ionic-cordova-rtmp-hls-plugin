@@ -263,31 +263,13 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
                     player.addListener(new Player.Listener() {
                         @Override
-                        public void onCue(@NonNull Cue cue) {
-
-                        }
-
-                        @Override
-                        public void onDurationChanged(long l) {
-
-                        }
-
-                        @Override
                         public void onStateChanged(@NonNull Player.State state) {
 
                         switch (state) {
-                            case BUFFERING:
-                            // player is buffering
-                            break;
                             case READY:
-                            player.play();
-                            break;
-                            case IDLE:
-                            break;
-                            case PLAYING:
-                            // playback started
-                            break;
-                        }
+                                    player.play();
+                                break;
+                            }
                         }
 
                         @Override

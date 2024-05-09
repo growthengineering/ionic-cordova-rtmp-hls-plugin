@@ -7,7 +7,7 @@ import Combine
 import VideoToolbox
 import AmazonIVSPlayer
 
-@objc(IoniCordovaRTMPandHLS) class IoniCordovaRTMPandHLS: CDVPlugin {
+@objc(IoniCordovaRTMPandHLS) class IoniCordovaRTMPandHLS: CDVPlugin, IVSPlayer.Delegate {
     
     var connection: RTMPConnection!
     var stream: RTMPStream!
@@ -197,8 +197,9 @@ import AmazonIVSPlayer
             avPlayerLayer.frame = viewController.view.bounds
             avPlayerLayer.zPosition = -1
             viewController.view.layer.addSublayer(avPlayerLayer)
+            avPlayer.addObserver(self, forKeyPath: #keyPath(IVSPlayer.state), options: [.new], context: nil)
             avPlayer.load(url)
-            avPlayer.play()
+            //avPlayer.play()
             
 
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
@@ -308,5 +309,13 @@ import AmazonIVSPlayer
         stream.videoSettings.isHardwareEncoderEnabled = false;
         stream.videoSettings.allowFrameReordering = false;
         stream.audioSettings.bitRate = 96*1000;
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == #keyPath(IVSPlayer.state), let newValue = change?[.newKey] as? IVSPlayer.State {
+            if newValue == .ready {
+                avPlayer.play()
+            }
+        }
     }
 }
