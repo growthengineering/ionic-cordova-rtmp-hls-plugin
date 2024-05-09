@@ -255,11 +255,11 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     exoPlayer.prepare();
                     */
 
-                    PlayerView playerView = new PlayerView(cordova.getActivity());
-                    playerView.setControlsEnabled(false);
-                    playerView.setResizeMode(ResizeMode.FILL);
+                    playerViewIVS = new PlayerView(context);
+                    playerViewIVS.setControlsEnabled(false);
+                    playerViewIVS.setResizeMode(ResizeMode.FILL);
 
-                    player = playerView.getPlayer();
+                    player = playerViewIVS.getPlayer();
 
                     player.addListener(new Player.Listener() {
                         @Override
@@ -320,16 +320,16 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                     );
-                    playerView.setLayoutParams(layoutParams);
+                    playerViewIVS.setLayoutParams(layoutParams);
 
                     ViewGroup parentView = (ViewGroup) webView.getView().getParent();
                     if (parentView instanceof FrameLayout) {
                         FrameLayout frameLayout = (FrameLayout) parentView;
-                        frameLayout.addView(playerView, 0);
+                        frameLayout.addView(playerViewIVS, 0);
                         webView.getView().bringToFront();
                     } else {
-                        cordova.getActivity().addContentView(playerView, layoutParams);
-                        playerView.bringToFront();
+                        cordova.getActivity().addContentView(playerViewIVS, layoutParams);
+                        playerViewIVS.bringToFront();
                     }
 
                     player.load(Uri.parse(HLSUrl));
