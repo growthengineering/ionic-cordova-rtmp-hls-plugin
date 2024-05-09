@@ -5,14 +5,15 @@ import AVFoundation
 import Logboard
 import Combine
 import VideoToolbox
+import AmazonIVSPlayer
 
 @objc(IoniCordovaRTMPandHLS) class IoniCordovaRTMPandHLS: CDVPlugin {
     
     var connection: RTMPConnection!
     var stream: RTMPStream!
     var hkView: MTHKView!
-    var avPlayer: AVPlayer!
-    var avPlayerLayer: AVPlayerLayer!
+    var avPlayer: IVSPlayer!
+    var avPlayerLayer: IVSPlayerLayer!
     var HLSUrl: String = ""
     var RTMPKey: String = ""
     var isFrontCamera: Bool = true
@@ -180,13 +181,23 @@ import VideoToolbox
         
         if let url = URL(string: streamURLString) {
             
-            avPlayer = AVPlayer(url: url)
+            /*avPlayer = AVPlayer(url: url)
             avPlayerLayer = AVPlayerLayer(player: avPlayer)
             avPlayerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
             avPlayerLayer.frame = viewController.view.bounds
             avPlayerLayer.zPosition = -1
             viewController.view.layer.addSublayer(avPlayerLayer)
             
+            avPlayer.play()
+            */
+
+            avPlayer = IVSPlayer()
+            avPlayerLayer = IVSPlayerLayer(player: avPlayer)
+            avPlayerLayer.videoGravity = .resizeAspectFill
+            avPlayerLayer.frame = viewController.view.bounds
+            avPlayerLayer.zPosition = -1
+            viewController.view.layer.addSublayer(avPlayerLayer)
+            avPlayer.load(url)
             avPlayer.play()
             
 

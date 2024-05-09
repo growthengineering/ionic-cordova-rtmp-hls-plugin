@@ -17,13 +17,6 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
 import org.json.JSONArray;
 import org.json.JSONException;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-import com.google.android.exoplayer2.ui.PlayerView;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.haishinkit.event.EventUtils;
 import com.haishinkit.media.AudioRecordSource;
 import com.haishinkit.media.Camera2Source;
@@ -35,14 +28,21 @@ import com.haishinkit.view.HkSurfaceView;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import androidx.annotation.NonNull;
+import com.amazonaws.ivs.player.Cue;
+import com.amazonaws.ivs.player.PlayerException;
+import com.amazonaws.ivs.player.Quality;
+import com.amazonaws.ivs.player.ResizeMode;
+import com.amazonaws.ivs.player.Player;
+import com.amazonaws.ivs.player.PlayerView;
 
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     private RtmpConnection connection;
     private RtmpStream stream;
     private Camera2Source cameraSource;
     private HkSurfaceView cameraView;
-    private PlayerView playerView;
-    private SimpleExoPlayer exoPlayer;
+    private PlayerView playerViewIVS;
+    private Player player;
     private CordovaWebView webView;
     private CordovaInterface cordova;
     private int currentCameraFacing = CameraCharacteristics.LENS_FACING_BACK;
@@ -239,7 +239,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             public void run() {
                 try {
                     Context context = cordova.getActivity().getApplicationContext();
-
+                    /*
                     exoPlayer = new SimpleExoPlayer.Builder(context).build();
                     exoPlayer.setPlayWhenReady(true);
 
@@ -253,6 +253,68 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
                     exoPlayer.setMediaSource(mediaSource);
                     exoPlayer.prepare();
+                    */
+
+                    PlayerView playerView = new PlayerView(cordova.getActivity());
+                    playerView.setControlsEnabled(false);
+                    playerView.setResizeMode(ResizeMode.FILL);
+
+                    player = playerView.getPlayer();
+
+                    player.addListener(new Player.Listener() {
+                        @Override
+                        public void onCue(@NonNull Cue cue) {
+
+                        }
+
+                        @Override
+                        public void onDurationChanged(long l) {
+
+                        }
+
+                        @Override
+                        public void onStateChanged(@NonNull Player.State state) {
+
+                        switch (state) {
+                            case BUFFERING:
+                            // player is buffering
+                            break;
+                            case READY:
+                            player.play();
+                            break;
+                            case IDLE:
+                            break;
+                            case PLAYING:
+                            // playback started
+                            break;
+                        }
+                        }
+
+                        @Override
+                        public void onError(@NonNull PlayerException e) {
+
+                        }
+
+                        @Override
+                        public void onRebuffering() {
+
+                        }
+
+                        @Override
+                        public void onSeekCompleted(long l) {
+
+                        }
+
+                        @Override
+                        public void onVideoSizeChanged(int i, int i1) {
+
+                        }
+
+                        @Override
+                        public void onQualityChanged(@NonNull Quality quality) {
+
+                        }
+                    });
 
                     ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
                             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -270,7 +332,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                         playerView.bringToFront();
                     }
 
-                    exoPlayer.play();
+                    player.load(Uri.parse(HLSUrl));
                     webView.getView().setBackgroundColor(Color.TRANSPARENT);
 
                     callbackContext.success("viewLiveStream Executed!");
@@ -285,18 +347,17 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         cordova.getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(playerView != null) {
-                    exoPlayer.stop();
-                    exoPlayer.release();
-                    exoPlayer = null;
+                if(playerViewIVS != null) {
+                    player.release();
+                    player = null;
 
                     ViewGroup parentView = (ViewGroup) webView.getView().getParent();
                     if (parentView instanceof FrameLayout) {
                         FrameLayout frameLayout = (FrameLayout) parentView;
-                        frameLayout.removeView(playerView);
+                        frameLayout.removeView(playerViewIVS);
                         webView.getView().bringToFront();
                         webView.getView().setBackgroundColor(Color.WHITE);
-                        playerView = null;
+                        playerViewIVS = null;
                     }
                     callbackContext.success("closeLiveStream Executed!");
                 }
