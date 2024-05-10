@@ -21,6 +21,7 @@ import org.apache.cordova.LOG;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import com.amazonaws.ivs.broadcast.BroadcastConfiguration;
 import com.amazonaws.ivs.broadcast.BroadcastException;
 import com.amazonaws.ivs.broadcast.BroadcastSession;
 import com.amazonaws.ivs.broadcast.Device;
@@ -44,140 +45,141 @@ import com.amazonaws.ivs.player.PlayerView;
 import java.util.List;
 
 public class IoniCordovaRTMPandHLS extends CordovaPlugin {
-private RtmpConnection connection;
-private RtmpStream stream;
-private BroadcastSession broadcastSession;
-private Camera2Source cameraSource;
-private ImagePreviewView cameraView;
-private PlayerView playerViewIVS;
-private Player player;
-private CordovaWebView webView;
-private CordovaInterface cordova;
-private Device currentCamera;
-private CallbackContext savedCallbackContext;
+  private RtmpConnection connection;
+  private RtmpStream stream;
+  private BroadcastSession broadcastSession;
+  private Camera2Source cameraSource;
+  private ImagePreviewView cameraView;
+  private PlayerView playerViewIVS;
+  private Player player;
+  private CordovaWebView webView;
+  private CordovaInterface cordova;
+  private Device currentCamera;
+  private CallbackContext savedCallbackContext;
+  private BroadcastConfiguration ivsVideoConfig;
 
-@Override
-public void initialize(final CordovaInterface _cordova, final CordovaWebView _webView) {
-  super.initialize(_cordova, _webView);
-  webView = _webView;
-  cordova = _cordova;
-}
-
-@Override
-public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-  switch(action) {
-    case "previewCamera":
-      JSONArray CameraOpts = args;
-      this.previewCamera(CameraOpts, callbackContext);
-      return true;
-    case "closeCameraPreview":
-      this.closeCameraPreview(callbackContext);
-      return true;
-    case "swapCamera":
-      this.swapCamera(callbackContext);
-      return true;
-    case "startBroadcasting":
-      String RTMPUrl = args.getString(0);
-      String RTMPKey = args.getString(1);
-      this.startBroadcasting(RTMPUrl, RTMPKey, callbackContext);
-      return true;
-    case "stopBroadcasting":
-      this.stopBroadcasting(callbackContext);
-      return true;
-    case "viewLiveStream":
-      String HLSUrl = args.getString(0);
-      this.viewLiveStream(HLSUrl, callbackContext);
-      return true;
-    case "closeLiveStream":
-      this.closeLiveStream(callbackContext);
-      return true;
-    case "requestPermissions":
-      this.requestPermissions(callbackContext);
-      return true;
+  @Override
+  public void initialize(final CordovaInterface _cordova, final CordovaWebView _webView) {
+    super.initialize(_cordova, _webView);
+    webView = _webView;
+    cordova = _cordova;
   }
-  return false;
-}
 
-private void previewCamera(JSONArray CameraOpts, CallbackContext callbackContext) {
-  cordova.getActivity().runOnUiThread(new Runnable() {
-    @SuppressLint("ResourceAsColor")
-    @Override
-    public void run() {
-      try {
-        Context context = cordova.getActivity().getApplicationContext();
+  @Override
+  public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+    switch(action) {
+      case "previewCamera":
+        JSONArray CameraOpts = args;
+        this.previewCamera(CameraOpts, callbackContext);
+        return true;
+      case "closeCameraPreview":
+        this.closeCameraPreview(callbackContext);
+        return true;
+      case "swapCamera":
+        this.swapCamera(callbackContext);
+        return true;
+      case "startBroadcasting":
+        String RTMPUrl = args.getString(0);
+        String RTMPKey = args.getString(1);
+        this.startBroadcasting(RTMPUrl, RTMPKey, callbackContext);
+        return true;
+      case "stopBroadcasting":
+        this.stopBroadcasting(callbackContext);
+        return true;
+      case "viewLiveStream":
+        String HLSUrl = args.getString(0);
+        this.viewLiveStream(HLSUrl, callbackContext);
+        return true;
+      case "closeLiveStream":
+        this.closeLiveStream(callbackContext);
+        return true;
+      case "requestPermissions":
+        this.requestPermissions(callbackContext);
+        return true;
+    }
+    return false;
+  }
 
-        createBroadcastSession();
+  private void previewCamera(JSONArray CameraOpts, CallbackContext callbackContext) {
+    cordova.getActivity().runOnUiThread(new Runnable() {
+      @SuppressLint("ResourceAsColor")
+      @Override
+      public void run() {
+        try {
+          Context context = cordova.getActivity().getApplicationContext();
 
-        broadcastSession.awaitDeviceChanges(() -> {
-          for(Device device: broadcastSession.listAttachedDevices()) {
+          createBroadcastSession();
 
-            if(device.getDescriptor().type == Device.Descriptor.DeviceType.CAMERA) {
-              ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-              );
+          broadcastSession.awaitDeviceChanges(() -> {
+            for(Device device: broadcastSession.listAttachedDevices()) {
 
-              currentCamera = device;
-              
-              cameraView = ((ImageDevice)device).getPreviewView();
-              cameraView.setLayoutParams(layoutParams);
+              if(device.getDescriptor().type == Device.Descriptor.DeviceType.CAMERA) {
+                ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                  ViewGroup.LayoutParams.MATCH_PARENT,
+                  ViewGroup.LayoutParams.MATCH_PARENT
+                );
 
-              ViewGroup parentView = (ViewGroup) webView.getView().getParent();
-              if (parentView instanceof FrameLayout) {
-                FrameLayout frameLayout = (FrameLayout) parentView;
-                frameLayout.addView(cameraView, 0);
-                webView.getView().bringToFront();
-              } else {
-                cordova.getActivity().addContentView(cameraView, layoutParams);
-                cameraView.bringToFront();
+                currentCamera = device;
+
+                cameraView = ((ImageDevice)device).getPreviewView();
+                cameraView.setLayoutParams(layoutParams);
+
+                ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+                if (parentView instanceof FrameLayout) {
+                  FrameLayout frameLayout = (FrameLayout) parentView;
+                  frameLayout.addView(cameraView, 0);
+                  webView.getView().bringToFront();
+                } else {
+                  cordova.getActivity().addContentView(cameraView, layoutParams);
+                  cameraView.bringToFront();
+                }
               }
             }
-          }
-        });
+          });
 
-        webView.getView().setBackgroundColor(Color.TRANSPARENT);
-        callbackContext.success("previewCamera Executed!");
+          webView.getView().setBackgroundColor(Color.TRANSPARENT);
+          callbackContext.success("previewCamera Executed!");
 
-      } catch (Exception ex) {
-        callbackContext.error("Failed to previewCamera");
-      }
-    }
-  });
-}
-
-private void closeCameraPreview(CallbackContext callbackContext) {
-  cordova.getActivity().runOnUiThread(new Runnable() {
-    @Override
-    public void run() {
-      if(cameraView != null) {
-        broadcastSession.release();
-        ViewGroup parentView = (ViewGroup) webView.getView().getParent();
-        if (parentView instanceof FrameLayout) {
-          FrameLayout frameLayout = (FrameLayout) parentView;
-          frameLayout.removeView(cameraView);
-          webView.getView().bringToFront();
-          webView.getView().setBackgroundColor(Color.WHITE);
-          cameraView = null;
-        }
-        if(callbackContext != null ) {
-          callbackContext.success("closeCameraPreview Executed!");
+        } catch (Exception ex) {
+          callbackContext.error("Failed to previewCamera");
         }
       }
-    }
-  });
-}
+    });
+  }
 
-private void swapCamera(CallbackContext callbackContext) {
-  cordova.getActivity().runOnUiThread(new Runnable() {
-    @Override
-    public void run() {
-      for(Device.Descriptor device: broadcastSession.listAvailableDevices(cordova.getActivity().getApplicationContext())) {
-        if(device.type == Device.Descriptor.DeviceType.CAMERA &&
-          device.position != currentCamera.getDescriptor().position) {
-
+  private void closeCameraPreview(CallbackContext callbackContext) {
+    cordova.getActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        if(cameraView != null) {
+          broadcastSession.release();
           ViewGroup parentView = (ViewGroup) webView.getView().getParent();
-
           if (parentView instanceof FrameLayout) {
+            FrameLayout frameLayout = (FrameLayout) parentView;
+            frameLayout.removeView(cameraView);
+            webView.getView().bringToFront();
+            webView.getView().setBackgroundColor(Color.WHITE);
+            cameraView = null;
+          }
+          if(callbackContext != null ) {
+            callbackContext.success("closeCameraPreview Executed!");
+          }
+        }
+      }
+    });
+  }
+
+  private void swapCamera(CallbackContext callbackContext) {
+    cordova.getActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        for(Device.Descriptor device: broadcastSession.listAvailableDevices(cordova.getActivity().getApplicationContext())) {
+          if(device.type == Device.Descriptor.DeviceType.CAMERA &&
+            device.position != currentCamera.getDescriptor().position) {
+
+            ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+
+            if (parentView instanceof FrameLayout) {
               FrameLayout frameLayout = (FrameLayout) parentView;
               frameLayout.removeView(cameraView);
               webView.getView().bringToFront();
@@ -185,247 +187,256 @@ private void swapCamera(CallbackContext callbackContext) {
               cameraView = null;
             }
 
-          broadcastSession.exchangeDevices(currentCamera, device, _camera -> {
+            broadcastSession.exchangeDevices(currentCamera, device, _camera -> {
+
+              ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+              );
+
+              currentCamera = _camera;
+              cameraView = ((ImageDevice)_camera).getPreviewView();
+              cameraView.setLayoutParams(layoutParams);
+
+              ViewGroup parentView2 = (ViewGroup) webView.getView().getParent();
+
+              if (parentView2 instanceof FrameLayout) {
+                FrameLayout frameLayout = (FrameLayout) parentView2;
+                frameLayout.addView(cameraView, 0);
+                webView.getView().bringToFront();
+                webView.getView().setBackgroundColor(Color.TRANSPARENT);
+              } else {
+                cordova.getActivity().addContentView(cameraView, layoutParams);
+                cameraView.bringToFront();
+              }
+
+            });
+            break;
+          }
+        }};
+    });
+  }
+
+  private void startBroadcasting(String RTMPSUrl, String RTMPKey, CallbackContext callbackContext) {
+    cordova.getActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          broadcastSession.start(RTMPSUrl, RTMPKey);
+          callbackContext.success("startBroadcasting Executed!");
+        } catch (Exception ex) {
+          callbackContext.error("Failed to startBroadcasting");
+        }
+      }
+    });
+  }
+
+  private void stopBroadcasting(CallbackContext callbackContext) {
+    new AsyncTask<Void, Void, Void>() {
+      @Override
+      protected Void doInBackground(Void... voids) {
+
+        broadcastSession.stop();
+        broadcastSession.release();
+        return null;
+      }
+
+      @Override
+      protected void onPostExecute(Void aVoid) {
+        callbackContext.success("stopBroadcasting Executed!");
+      }}.execute();
+  }
+
+  private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {
+    cordova.getActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          Context context = cordova.getActivity().getApplicationContext();
+
+          playerViewIVS = new PlayerView(context);
+          playerViewIVS.setControlsEnabled(false);
+          playerViewIVS.setResizeMode(ResizeMode.FILL);
+
+          player = playerViewIVS.getPlayer();
+
+          player.addListener(new Player.Listener() {
+            @Override
+            public void onCue(@NonNull Cue cue) {
+
+            }
+
+            @Override
+            public void onDurationChanged(long l) {
+
+            }
+
+            @Override
+            public void onStateChanged(@NonNull Player.State state) {
+
+              switch (state) {
+                case READY:
+                  player.play();
+                  break;
+              }
+            }
+
+            @Override
+            public void onError(@NonNull PlayerException e) {
+
+            }
+
+            @Override
+            public void onRebuffering() {
+
+            }
+
+            @Override
+            public void onSeekCompleted(long l) {
+
+            }
+
+            @Override
+            public void onVideoSizeChanged(int i, int i1) {
+
+            }
+
+            @Override
+            public void onQualityChanged(@NonNull Quality quality) {
+
+            }
+          });
 
           ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
           );
+          playerViewIVS.setLayoutParams(layoutParams);
 
-          currentCamera = _camera;
-          cameraView = ((ImageDevice)_camera).getPreviewView();
-          cameraView.setLayoutParams(layoutParams);
-
-          ViewGroup parentView2 = (ViewGroup) webView.getView().getParent();
-
-          if (parentView2 instanceof FrameLayout) {
-            FrameLayout frameLayout = (FrameLayout) parentView2;
-            frameLayout.addView(cameraView, 0);
+          ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+          if (parentView instanceof FrameLayout) {
+            FrameLayout frameLayout = (FrameLayout) parentView;
+            frameLayout.addView(playerViewIVS, 0);
             webView.getView().bringToFront();
-            webView.getView().setBackgroundColor(Color.TRANSPARENT);
           } else {
-            cordova.getActivity().addContentView(cameraView, layoutParams);
-            cameraView.bringToFront();
+            cordova.getActivity().addContentView(playerViewIVS, layoutParams);
+            playerViewIVS.bringToFront();
           }
 
-          });
-          break;
+          player.load(Uri.parse(HLSUrl));
+          webView.getView().setBackgroundColor(Color.TRANSPARENT);
+
+          callbackContext.success("viewLiveStream Executed!");
+        } catch (Exception ex) {
+          callbackContext.error("Failed to viewLiveStream");
         }
-      }};
-  });
-}
-
-private void startBroadcasting(String RTMPSUrl, String RTMPKey, CallbackContext callbackContext) {
-  cordova.getActivity().runOnUiThread(new Runnable() {
-    @Override
-    public void run() {
-      try {
-        broadcastSession.start(RTMPSUrl, RTMPKey);
-        callbackContext.success("startBroadcasting Executed!");
-      } catch (Exception ex) {
-        callbackContext.error("Failed to startBroadcasting");
       }
-    }
-  });
-}
-
-private void stopBroadcasting(CallbackContext callbackContext) {
-  new AsyncTask<Void, Void, Void>() {
-    @Override
-    protected Void doInBackground(Void... voids) {
-
-      broadcastSession.stop();
-      broadcastSession.release();
-      return null;
-    }
-
-    @Override
-    protected void onPostExecute(Void aVoid) {
-      callbackContext.success("stopBroadcasting Executed!");
-    }}.execute();
-}
-
-private void viewLiveStream(String HLSUrl, CallbackContext callbackContext) {
-  cordova.getActivity().runOnUiThread(new Runnable() {
-    @Override
-    public void run() {
-      try {
-        Context context = cordova.getActivity().getApplicationContext();
-
-        playerViewIVS = new PlayerView(context);
-        playerViewIVS.setControlsEnabled(false);
-        playerViewIVS.setResizeMode(ResizeMode.FILL);
-
-        player = playerViewIVS.getPlayer();
-
-        player.addListener(new Player.Listener() {
-          @Override
-          public void onCue(@NonNull Cue cue) {
-
-          }
-
-          @Override
-          public void onDurationChanged(long l) {
-
-          }
-
-          @Override
-          public void onStateChanged(@NonNull Player.State state) {
-
-            switch (state) {
-              case READY:
-                player.play();
-                break;
-            }
-          }
-
-          @Override
-          public void onError(@NonNull PlayerException e) {
-
-          }
-
-          @Override
-          public void onRebuffering() {
-
-          }
-
-          @Override
-          public void onSeekCompleted(long l) {
-
-          }
-
-          @Override
-          public void onVideoSizeChanged(int i, int i1) {
-
-          }
-
-          @Override
-          public void onQualityChanged(@NonNull Quality quality) {
-
-          }
-        });
-
-        ViewGroup.LayoutParams layoutParams = new ViewGroup.LayoutParams(
-          ViewGroup.LayoutParams.MATCH_PARENT,
-          ViewGroup.LayoutParams.MATCH_PARENT
-        );
-        playerViewIVS.setLayoutParams(layoutParams);
-
-        ViewGroup parentView = (ViewGroup) webView.getView().getParent();
-        if (parentView instanceof FrameLayout) {
-          FrameLayout frameLayout = (FrameLayout) parentView;
-          frameLayout.addView(playerViewIVS, 0);
-          webView.getView().bringToFront();
-        } else {
-          cordova.getActivity().addContentView(playerViewIVS, layoutParams);
-          playerViewIVS.bringToFront();
-        }
-
-        player.load(Uri.parse(HLSUrl));
-        webView.getView().setBackgroundColor(Color.TRANSPARENT);
-
-        callbackContext.success("viewLiveStream Executed!");
-      } catch (Exception ex) {
-        callbackContext.error("Failed to viewLiveStream");
-      }
-    }
-  });
-}
-
-private void closeLiveStream(CallbackContext callbackContext) {
-  cordova.getActivity().runOnUiThread(new Runnable() {
-    @Override
-    public void run() {
-      if(playerViewIVS != null) {
-        player.release();
-        player = null;
-
-        ViewGroup parentView = (ViewGroup) webView.getView().getParent();
-        if (parentView instanceof FrameLayout) {
-          FrameLayout frameLayout = (FrameLayout) parentView;
-          frameLayout.removeView(playerViewIVS);
-          webView.getView().bringToFront();
-          webView.getView().setBackgroundColor(Color.WHITE);
-          playerViewIVS = null;
-        }
-        callbackContext.success("closeLiveStream Executed!");
-      }
-    }
-  });
-}
-
-private void requestPermissions(CallbackContext callbackContext) {
-  savedCallbackContext = callbackContext;
-
-  String[] permissions = {
-    Manifest.permission.CAMERA,
-    Manifest.permission.RECORD_AUDIO
-  };
-
-  boolean hasPermissions = true;
-  for (String permission : permissions) {
-    if (ContextCompat.checkSelfPermission(cordova.getActivity(), permission) != PackageManager.PERMISSION_GRANTED) {
-      hasPermissions = false;
-      break;
-    }
+    });
   }
 
-  if (!hasPermissions) {
-    cordova.requestPermissions(this, 1, permissions);
-  } else {
-    savedCallbackContext.success("requestPermissions Executed!");
+  private void closeLiveStream(CallbackContext callbackContext) {
+    cordova.getActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        if(playerViewIVS != null) {
+          player.release();
+          player = null;
+
+          ViewGroup parentView = (ViewGroup) webView.getView().getParent();
+          if (parentView instanceof FrameLayout) {
+            FrameLayout frameLayout = (FrameLayout) parentView;
+            frameLayout.removeView(playerViewIVS);
+            webView.getView().bringToFront();
+            webView.getView().setBackgroundColor(Color.WHITE);
+            playerViewIVS = null;
+          }
+          callbackContext.success("closeLiveStream Executed!");
+        }
+      }
+    });
   }
-}
 
-@Override
-public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
-  if (requestCode == 1) {
-    boolean allPermissionsGranted = true;
+  private void requestPermissions(CallbackContext callbackContext) {
+    savedCallbackContext = callbackContext;
 
-    for (int result : grantResults) {
-      if (result != PackageManager.PERMISSION_GRANTED) {
-        allPermissionsGranted = false;
+    String[] permissions = {
+      Manifest.permission.CAMERA,
+      Manifest.permission.RECORD_AUDIO
+    };
+
+    boolean hasPermissions = true;
+    for (String permission : permissions) {
+      if (ContextCompat.checkSelfPermission(cordova.getActivity(), permission) != PackageManager.PERMISSION_GRANTED) {
+        hasPermissions = false;
         break;
       }
     }
 
-    if (allPermissionsGranted) {
-      // Call success in the onRequestPermissionResult
-      savedCallbackContext.success("Permissions granted!");
+    if (!hasPermissions) {
+      cordova.requestPermissions(this, 1, permissions);
     } else {
-      // Call error in the onRequestPermissionResult
-      savedCallbackContext.error("Permissions denied!");
+      savedCallbackContext.success("requestPermissions Executed!");
     }
-
-    // Reset the stored callback context after using it
-    savedCallbackContext = null;
-
-  } else {
-    // Handle other permission requests if any
-    super.onRequestPermissionResult(requestCode, permissions, grantResults);
   }
-}
-BroadcastSession.Listener broadcastListener =
-  new BroadcastSession.Listener() {
-    @Override
-    public void onStateChanged(@NonNull BroadcastSession.State state) {
-      Log.d("D", "State=" + state);
+
+  @Override
+  public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+    if (requestCode == 1) {
+      boolean allPermissionsGranted = true;
+
+      for (int result : grantResults) {
+        if (result != PackageManager.PERMISSION_GRANTED) {
+          allPermissionsGranted = false;
+          break;
+        }
+      }
+
+      if (allPermissionsGranted) {
+        // Call success in the onRequestPermissionResult
+        savedCallbackContext.success("Permissions granted!");
+      } else {
+        // Call error in the onRequestPermissionResult
+        savedCallbackContext.error("Permissions denied!");
+      }
+
+      // Reset the stored callback context after using it
+      savedCallbackContext = null;
+
+    } else {
+      // Handle other permission requests if any
+      super.onRequestPermissionResult(requestCode, permissions, grantResults);
     }
+  }
+  BroadcastSession.Listener broadcastListener =
+    new BroadcastSession.Listener() {
+      @Override
+      public void onStateChanged(@NonNull BroadcastSession.State state) {
+        Log.d("D", "State=" + state);
+      }
 
-    @Override
-    public void onError(@NonNull BroadcastException exception) {
-      Log.e("D", "Exception: " + exception);
-    }
-  };
+      @Override
+      public void onError(@NonNull BroadcastException exception) {
+        Log.e("D", "Exception: " + exception);
+      }
+    };
 
-private void createBroadcastSession() {
-  Context ctx = cordova.getActivity().getApplicationContext();
-  broadcastSession = new BroadcastSession(ctx,
-    broadcastListener,
-    Presets.Configuration.STANDARD_PORTRAIT,
-    Presets.Devices.BACK_CAMERA(ctx));
+  private void setVideoSettings() {
+    ivsVideoConfig = new BroadcastConfiguration();
+    ivsVideoConfig.audio.setBitrate(128_000);
+    ivsVideoConfig.video.setMaxBitrate(8_500_000);
+    ivsVideoConfig.video.setMinBitrate(4_250_000);
+    ivsVideoConfig.video.setInitialBitrate(8_500_000);
+    ivsVideoConfig.video.setSize(1080, 1920);
+    ivsVideoConfig.video.setKeyframeInterval(2);
+    ivsVideoConfig.video.setTargetFramerate(60);
+  }
 
-
-
-}
+  private void createBroadcastSession() {
+    Context ctx = cordova.getActivity().getApplicationContext();
+    setVideoSettings();
+    broadcastSession = new BroadcastSession(ctx,
+      broadcastListener,
+      ivsVideoConfig,
+      Presets.Devices.BACK_CAMERA(ctx));
+  }
 }

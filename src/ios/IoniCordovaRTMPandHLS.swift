@@ -28,6 +28,7 @@ import AmazonIVSBroadcast
     var isFrontCamera: Bool = true
     var broadcastSession: IVSBroadcastSession!
     var currentCamera: IVSImageDevice!
+    var ivsVideoConfig: IVSBroadcastConfiguration!
  
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
@@ -297,7 +298,7 @@ import AmazonIVSBroadcast
         let cameraPermission = AVCaptureDevice.authorizationStatus(for: .video)
         let audioPermission = AVCaptureDevice.authorizationStatus(for: .audio)
         return cameraPermission == .authorized && audioPermission == .authorized
-    } 
+    }
     
     @objc private func rtmpStatusHandler(notification: Notification) {
         let e = Event.from(notification)
@@ -318,6 +319,19 @@ import AmazonIVSBroadcast
     }
 
     func setVideoSettings() {
+        do {
+            ivsVideoConfig = IVSBroadcastConfiguration()
+            try ivsVideoConfig.audio.setBitrate(128_000)
+            try ivsVideoConfig.video.setMaxBitrate(8_500_000)
+            try ivsVideoConfig.video.setMinBitrate(4_250_000)
+            try ivsVideoConfig.video.setInitialBitrate(8_500_000)
+            try ivsVideoConfig.video.setSize(CGSize(width: 1080, height: 1920))
+            try ivsVideoConfig.video.setKeyframeInterval(2)
+            try ivsVideoConfig.video.setTargetFramerate(60)
+            
+        } catch { }
+        
+        /*
         stream.frameRate = 60;
         stream.videoOrientation = .portrait;
         stream.videoSettings.videoSize = .init(width: 1080, height: 1920);
@@ -329,6 +343,7 @@ import AmazonIVSBroadcast
         stream.videoSettings.isHardwareEncoderEnabled = false;
         stream.videoSettings.allowFrameReordering = false;
         stream.audioSettings.bitRate = 96*1000;
+        */
     }
 
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
@@ -342,14 +357,15 @@ import AmazonIVSBroadcast
     func createBroadcastSession(completion: @escaping (Result<Void, Error>) -> Void) {
 
         do {
-               broadcastSession = try IVSBroadcastSession(
-                   configuration: IVSPresets.configurations().standardLandscape(),
-                   descriptors: IVSPresets.devices().backCamera(),
-                   delegate: self)
-                completion(.success(()))
+                setVideoSettings()
+                broadcastSession = try IVSBroadcastSession(
+                    configuration: ivsVideoConfig, //IVSPresets.configurations().basicPortrait(),
+                       descriptors: IVSPresets.devices().backCamera(),
+                       delegate: self)
+                    completion(.success(()))
            } catch {
-               print("Error initializing IVSBroadcastSession: \(error)")
-               completion(.failure((error)))
+                print("Error initializing IVSBroadcastSession: \(error)")
+                completion(.failure((error)))
            }
     }
 }
