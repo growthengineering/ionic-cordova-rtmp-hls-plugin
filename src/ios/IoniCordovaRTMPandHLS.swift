@@ -20,7 +20,7 @@ import AmazonIVSBroadcast
     
     var connection: RTMPConnection!
     var stream: RTMPStream!
-    var hkView: MTHKView!
+    var hkView: IVSImagePreviewView!
     var avPlayer: IVSPlayer!
     var avPlayerLayer: IVSPlayerLayer!
     var HLSUrl: String = ""
@@ -46,10 +46,7 @@ import AmazonIVSBroadcast
             print(error)
         }
         
-        hkView = MTHKView(frame: webView.bounds)
-        hkView.layer.zPosition = 0;
-        hkView.videoGravity = AVLayerVideoGravity.resizeAspectFill
- 
+       
         createBroadcastSession { result in
             switch result {
             case .success:
@@ -57,8 +54,7 @@ import AmazonIVSBroadcast
                 self.webView.isOpaque = false
                 self.webView.backgroundColor = UIColor.clear
                 self.viewController.view.backgroundColor = UIColor.clear
-                self.hkView.backgroundColor  = UIColor.clear
- 
+                
                 
                 self.broadcastSession.awaitDeviceChanges {
                     do {
@@ -67,11 +63,14 @@ import AmazonIVSBroadcast
                            .first {
                             self.currentCamera = devicePreview;
                             var newView: IVSImagePreviewView = try devicePreview.previewView()
-         
+                            
+             
                             newView.frame = self.webView.frame
                             newView.bounds = self.webView.bounds
                             newView.layer.zPosition = 0
-                            self.viewController.view.insertSubview(newView, belowSubview: self.webView)
+                            self.hkView = newView
+                            self.hkView.backgroundColor  = UIColor.clear
+                            self.viewController.view.insertSubview(self.hkView , belowSubview: self.webView)
 
                         }
                     } catch {
@@ -130,7 +129,14 @@ import AmazonIVSBroadcast
             self.currentCamera = newDevice as! IVSImageDevice
             if let camera = newDevice as? IVSImageDevice {
                 do {
-                    try self.viewController.view.insertSubview(camera.previewView(), belowSubview: self.webView)
+                    var newView: IVSImagePreviewView = try camera.previewView()
+                    newView.frame = self.webView.frame
+                    newView.bounds = self.webView.bounds
+                    newView.layer.zPosition = 0
+                    self.hkView = newView
+                    self.hkView.backgroundColor  = UIColor.clear
+                     
+                    try self.viewController.view.insertSubview(self.hkView, belowSubview: self.webView)
                 } catch {
                     print("Error creating preview view \(error)")
                 }
@@ -177,10 +183,11 @@ import AmazonIVSBroadcast
     func stopBroadcasting(command: CDVInvokedUrlCommand) {
        DispatchQueue.main.async { [weak self] in
            guard let self = self else { return }
-           
-           broadcastSession.stop()
-           let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
-           self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            hkView?.removeFromSuperview()
+            hkView = nil
+            broadcastSession.stop()
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
        }
     }
     
