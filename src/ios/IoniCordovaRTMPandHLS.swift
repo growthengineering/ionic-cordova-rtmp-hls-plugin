@@ -366,7 +366,7 @@ import AmazonIVSBroadcast
         do {
                 setVideoSettings()
                 broadcastSession = try IVSBroadcastSession(
-                    configuration: ivsVideoConfig, //IVSPresets.configurations().basicPortrait(),
+                    configuration: ivsVideoConfig,
                        descriptors: IVSPresets.devices().backCamera(),
                        delegate: self)
                     completion(.success(()))
