@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -236,13 +237,17 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
       @Override
       protected Void doInBackground(Void... voids) {
 
-        broadcastSession.stop();
-        broadcastSession.release();
         return null;
       }
 
       @Override
       protected void onPostExecute(Void aVoid) {
+        cordova.getActivity().runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            broadcastSession.stop();
+          }
+        });
         callbackContext.success("stopBroadcasting Executed!");
       }}.execute();
   }
@@ -263,7 +268,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
           player.addListener(new Player.Listener() {
             @Override
             public void onCue(@NonNull Cue cue) {
-
+            
             }
 
             @Override
@@ -283,7 +288,15 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
             @Override
             public void onError(@NonNull PlayerException e) {
-
+              if (e.getCode() == 404) {
+                callbackContext.error("Buffering");
+                new Handler().postDelayed(new Runnable() {
+                  @Override
+                  public void run() {
+                    viewLiveStream(HLSUrl, callbackContext); // Call viewLiveStream after delay
+                  }
+                }, 3000);
+              }
             }
 
             @Override

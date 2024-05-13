@@ -205,25 +205,10 @@ import AmazonIVSBroadcast
         
         if let url = URL(string: streamURLString) {
             
-            /*avPlayer = AVPlayer(url: url)
-            avPlayerLayer = AVPlayerLayer(player: avPlayer)
-            avPlayerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-            avPlayerLayer.frame = viewController.view.bounds
-            avPlayerLayer.zPosition = -1
-            viewController.view.layer.addSublayer(avPlayerLayer)
-            
-            avPlayer.play()
-            */
 
-            avPlayer = IVSPlayer()
-            avPlayerLayer = IVSPlayerLayer(player: avPlayer)
-            avPlayerLayer.videoGravity = .resizeAspectFill
-            avPlayerLayer.frame = viewController.view.bounds
-            avPlayerLayer.zPosition = -1
-            viewController.view.layer.addSublayer(avPlayerLayer)
-            avPlayer.addObserver(self, forKeyPath: #keyPath(IVSPlayer.state), options: [.new], context: nil)
+            HLSUrl = streamURLString
+            setupLivestream()
             avPlayer.load(url)
-            avPlayer.play()
             
 
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
@@ -353,11 +338,15 @@ import AmazonIVSBroadcast
         */
     }
 
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == #keyPath(IVSPlayer.state), let newValue = change?[.newKey] as? IVSPlayer.State {
-            if newValue == .ready {
-                avPlayer.play()
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)  {
+
+        if keyPath == #keyPath(IVSPlayer.error)  {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                self.setupLivestream()
             }
+        }
+        if keyPath == #keyPath(IVSPlayer.state) {
+            avPlayer.play()
         }
     }
     
@@ -374,5 +363,17 @@ import AmazonIVSBroadcast
                 print("Error initializing IVSBroadcastSession: \(error)")
                 completion(.failure((error)))
            }
+    }
+    
+    func setupLivestream() {
+        avPlayer = IVSPlayer()
+        avPlayerLayer = IVSPlayerLayer(player: avPlayer)
+        avPlayerLayer.videoGravity = .resizeAspectFill
+        avPlayerLayer.frame = viewController.view.bounds
+        avPlayerLayer.zPosition = -1
+        viewController.view.layer.addSublayer(avPlayerLayer)
+        avPlayer.addObserver(self, forKeyPath: #keyPath(IVSPlayer.state), options: [.new], context: nil)
+        avPlayer.addObserver(self, forKeyPath: #keyPath(IVSPlayer.error), options: [.new], context: nil)
+        avPlayer.load(URL(string:HLSUrl))
     }
 }
