@@ -289,13 +289,12 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             @Override
             public void onError(@NonNull PlayerException e) {
               if (e.getCode() == 404) {
-                callbackContext.error("Buffering");
                 new Handler().postDelayed(new Runnable() {
                   @Override
                   public void run() {
-                    viewLiveStream(HLSUrl, callbackContext); // Call viewLiveStream after delay
+                    viewLiveStream(HLSUrl, callbackContext);
                   }
-                }, 3000);
+                }, 5000);
               }
             }
 
