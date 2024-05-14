@@ -21,6 +21,7 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.LOG;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.amazonaws.ivs.broadcast.BroadcastConfiguration;
 import com.amazonaws.ivs.broadcast.BroadcastException;
@@ -42,6 +43,8 @@ import com.amazonaws.ivs.player.Quality;
 import com.amazonaws.ivs.player.ResizeMode;
 import com.amazonaws.ivs.player.Player;
 import com.amazonaws.ivs.player.PlayerView;
+import org.apache.cordova.PluginResult;
+
 
 import java.util.List;
 
@@ -57,6 +60,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
   private CordovaInterface cordova;
   private Device currentCamera;
   private CallbackContext savedCallbackContext;
+  private CallbackContext eventsCallbackContext;
   private BroadcastConfiguration ivsVideoConfig;
 
   @Override
@@ -69,6 +73,12 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
   @Override
   public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
     switch(action) {
+      case "onConnectionChange":
+        eventsCallbackContext = callbackContext;
+        return true;
+      case "offConnectionChange":
+        eventsCallbackContext = null;
+        return true;
       case "previewCamera":
         JSONArray CameraOpts = args;
         this.previewCamera(CameraOpts, callbackContext);
@@ -258,7 +268,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
       public void run() {
         try {
           Context context = cordova.getActivity().getApplicationContext();
-
+          savedCallbackContext = callbackContext;
           playerViewIVS = new PlayerView(context);
           playerViewIVS.setControlsEnabled(false);
           playerViewIVS.setResizeMode(ResizeMode.FILL);
@@ -280,8 +290,28 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             public void onStateChanged(@NonNull Player.State state) {
 
               switch (state) {
+                case ENDED:
+                  try {
+                    JSONObject eventData = new JSONObject();
+                    eventData.put("connected", false);
+                    sendConnectionEvent(eventData);
+                  } catch (Exception e) {
+
+                    Log.d("TESTJL",  "error 1 ended");
+                  }
+                  break;
+              
                 case READY:
                   player.play();
+
+                  try {
+                    JSONObject eventData = new JSONObject();
+                    eventData.put("connected", true);
+                    sendConnectionEvent(eventData);
+                  } catch (Exception e) {
+
+                    Log.d("TESTJL",  "error 1");
+                  }
                   break;
               }
             }
@@ -295,7 +325,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     viewLiveStream(HLSUrl, callbackContext);
                   }
                 }, 5000);
-              }
+              } 
             }
 
             @Override
@@ -419,6 +449,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
       super.onRequestPermissionResult(requestCode, permissions, grantResults);
     }
   }
+  
   BroadcastSession.Listener broadcastListener =
     new BroadcastSession.Listener() {
       @Override
@@ -450,5 +481,16 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
       broadcastListener,
       ivsVideoConfig,
       Presets.Devices.BACK_CAMERA(ctx));
+  }
+
+  private void sendConnectionEvent(JSONObject eventData) {
+    if(eventsCallbackContext != null) {
+      PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
+      result.setKeepCallback(true);
+
+      Log.d("TESTJL",  "sendPluginResult");
+      //webView.sendPluginResult(result, "onConnectionChangeEmit");
+      eventsCallbackContext.sendPluginResult(result);
+    }
   }
 }
