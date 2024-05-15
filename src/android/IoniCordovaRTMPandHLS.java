@@ -61,6 +61,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
   private Device currentCamera;
   private CallbackContext savedCallbackContext;
   private CallbackContext eventsCallbackContext;
+  private CallbackContext eventsCallbackContext2;
   private BroadcastConfiguration ivsVideoConfig;
 
   @Override
@@ -73,6 +74,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
   @Override
   public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
     switch(action) {
+      case "addConnectiontListenerOffline":
+        eventsCallbackContext2 = callbackContext;
+        return true;
       case "onConnectionChange":
         eventsCallbackContext = callbackContext;
         return true;
@@ -294,7 +298,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                   try {
                     JSONObject eventData = new JSONObject();
                     eventData.put("connected", false);
-                    sendConnectionEvent(eventData);
+                    sendConnectionEvent(eventData, 'addConnectiontListenerOffline');
                   } catch (Exception e) {
 
                     Log.d("TESTJL",  "error 1 ended");
@@ -307,7 +311,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                   try {
                     JSONObject eventData = new JSONObject();
                     eventData.put("connected", true);
-                    sendConnectionEvent(eventData);
+                    sendConnectionEvent(eventData, 'onConnectionChange');
                   } catch (Exception e) {
 
                     Log.d("TESTJL",  "error 1");
@@ -483,14 +487,21 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
       Presets.Devices.BACK_CAMERA(ctx));
   }
 
-  private void sendConnectionEvent(JSONObject eventData) {
-    if(eventsCallbackContext != null) {
+  private void sendConnectionEvent(JSONObject eventData, String eventName) {
+    if(eventsCallbackContext != null && eventName == 'onConnectionChange') {
       PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
       result.setKeepCallback(true);
 
-      Log.d("TESTJL",  "sendPluginResult");
-      //webView.sendPluginResult(result, "onConnectionChangeEmit");
+      Log.d("TESTJL",  "sendPluginResult onConnectionChange");
       eventsCallbackContext.sendPluginResult(result);
+    }  else if(eventsCallbackContext2 != null && eventName == 'addConnectiontListenerOffline') {
+      PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
+      result.setKeepCallback(true);
+
+      Log.d("TESTJL",  "sendPluginResult addConnectiontListenerOffline");
+      eventsCallbackContext2.sendPluginResult(result);
     }
+
+    
   }
 }

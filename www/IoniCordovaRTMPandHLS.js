@@ -41,6 +41,9 @@ IoniCordovaRTMPandHLS.onConnectionChange = function (success, error) {
 IoniCordovaRTMPandHLS.offConnectionChange = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'offConnectionChange', []);
 };
+IoniCordovaRTMPandHLS.addConnectiontListenerOffline = function (success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'addConnectiontListenerOffline', []);
+};
 
 
 module.exports = IoniCordovaRTMPandHLS;

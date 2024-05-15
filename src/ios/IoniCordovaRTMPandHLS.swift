@@ -31,6 +31,8 @@ import AmazonIVSBroadcast
     var ivsVideoConfig: IVSBroadcastConfiguration!
     var eventsCallbackCommand: CDVInvokedUrlCommand!
     
+    var eventsCallbackCommand2: CDVInvokedUrlCommand!
+    
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
         guard checkPermissions() else {
@@ -342,34 +344,30 @@ import AmazonIVSBroadcast
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)  {
         print("keyPath", keyPath)
         if keyPath == #keyPath(IVSPlayer.state) {
-                // Now we safely have access to the player's state
-                if( avPlayer == nil) {
-                    print("IVSPlayer IS NILL")
-                    let pluginResult3 = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: (try? String(data: JSONSerialization.data(withJSONObject: ["connected": false], options: []), encoding: .utf8)) ?? "")
-                    commandDelegate.send(pluginResult3, callbackId: eventsCallbackCommand.callbackId)
-             
-                    return;
-                }
-                switch avPlayer.state {
+            // Now we safely have access to the player's state
+            if( avPlayer == nil) {
+                print("IVSPlayer IS NILL")
+                return
+            }
+            switch avPlayer.state {
+                case .ready:
+                        print("IVSPlayer state is ready")
+                        avPlayer.play()
+                        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"connected\": true}")
+                        commandDelegate.send(pluginResult, callbackId: eventsCallbackCommand.callbackId)
+                    break
                 case .ended:
                         print("IVSPlayer state is ended")
-                        let pluginResult2 = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: (try? String(data: JSONSerialization.data(withJSONObject: ["connected": false], options: []), encoding: .utf8)) ?? "")
-                        commandDelegate.send(pluginResult2, callbackId: eventsCallbackCommand.callbackId)
-                    break;
-                case .ready:
-                    // Handle the state being ready
-                    print("IVSPlayer state is ready")
-                    avPlayer.play()
-                    let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: (try? String(data: JSONSerialization.data(withJSONObject: ["connected": true], options: []), encoding: .utf8)) ?? "")
-                    commandDelegate.send(pluginResult, callbackId: eventsCallbackCommand.callbackId)
-                    break;
+                        let pluginResult2 = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"connected\": false}")
+                        commandDelegate.send(pluginResult2, callbackId: eventsCallbackCommand2.callbackId)
+                    break
                 case .playing:
                     print("IVSPlayer state is playing")
-                @unknown default:
+                default:
                     print("IVSPlayer state is UNKNOW")
-                    break;
-                }
+                    break
             }
+        }
         
         if keyPath == #keyPath(IVSPlayer.error)  {
             print("IVSPlayer ERROR TRIGEREDE")
@@ -413,6 +411,11 @@ import AmazonIVSBroadcast
     
     @objc(offConnectionChange:)
     func offConnectionChange(command: CDVInvokedUrlCommand) {
-        eventsCallbackCommand = nil;
+        //eventsCallbackCommand = nil;
+        //eventsCallbackCommand2 = nil;
+    }
+    @objc(addConnectiontListenerOffline:)
+    func addConnectiontListenerOffline(command: CDVInvokedUrlCommand) {
+        eventsCallbackCommand2 = command;
     }
 }
