@@ -298,7 +298,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                   try {
                     JSONObject eventData = new JSONObject();
                     eventData.put("connected", false);
-                    sendConnectionEvent(eventData, 'addConnectiontListenerOffline');
+                    sendConnectionEvent(eventData, "addConnectiontListenerOffline");
                   } catch (Exception e) {
 
                     Log.d("TESTJL",  "error 1 ended");
@@ -311,7 +311,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                   try {
                     JSONObject eventData = new JSONObject();
                     eventData.put("connected", true);
-                    sendConnectionEvent(eventData, 'onConnectionChange');
+                    sendConnectionEvent(eventData, "onConnectionChange");
                   } catch (Exception e) {
 
                     Log.d("TESTJL",  "error 1");
@@ -488,13 +488,13 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
   }
 
   private void sendConnectionEvent(JSONObject eventData, String eventName) {
-    if(eventsCallbackContext != null && eventName == 'onConnectionChange') {
+    if(eventsCallbackContext != null && eventName == "onConnectionChange") {
       PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
       result.setKeepCallback(true);
 
       Log.d("TESTJL",  "sendPluginResult onConnectionChange");
       eventsCallbackContext.sendPluginResult(result);
-    }  else if(eventsCallbackContext2 != null && eventName == 'addConnectiontListenerOffline') {
+    }  else if(eventsCallbackContext2 != null && eventName == "addConnectiontListenerOffline") {
       PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
       result.setKeepCallback(true);
 
