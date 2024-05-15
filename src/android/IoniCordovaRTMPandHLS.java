@@ -470,12 +470,12 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
   private void setVideoSettings() {
     ivsVideoConfig = new BroadcastConfiguration();
     ivsVideoConfig.audio.setBitrate(128_000);
-    ivsVideoConfig.video.setMaxBitrate(8_500_000);
-    ivsVideoConfig.video.setMinBitrate(4_250_000);
-    ivsVideoConfig.video.setInitialBitrate(8_500_000);
+    ivsVideoConfig.video.setMaxBitrate(8_000_000);
+    ivsVideoConfig.video.setMinBitrate(2_500_000);
+    ivsVideoConfig.video.setInitialBitrate(5_000_000);
     ivsVideoConfig.video.setSize(1080, 1920);
-    ivsVideoConfig.video.setKeyframeInterval(2);
-    ivsVideoConfig.video.setTargetFramerate(60);
+    ivsVideoConfig.video.setKeyframeInterval(1);
+    ivsVideoConfig.video.setTargetFramerate(30);
   }
 
   private void createBroadcastSession() {

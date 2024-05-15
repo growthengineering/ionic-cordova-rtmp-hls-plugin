@@ -317,12 +317,12 @@ import AmazonIVSBroadcast
         do {
             ivsVideoConfig = IVSBroadcastConfiguration()
             try ivsVideoConfig.audio.setBitrate(128_000)
-            try ivsVideoConfig.video.setMaxBitrate(8_500_000)
-            try ivsVideoConfig.video.setMinBitrate(4_250_000)
-            try ivsVideoConfig.video.setInitialBitrate(8_500_000)
+            try ivsVideoConfig.video.setMaxBitrate(8_000_000)
+            try ivsVideoConfig.video.setMinBitrate(2_500_000)
+            try ivsVideoConfig.video.setInitialBitrate(5_000_000)
             try ivsVideoConfig.video.setSize(CGSize(width: 1080, height: 1920))
-            try ivsVideoConfig.video.setKeyframeInterval(2)
-            try ivsVideoConfig.video.setTargetFramerate(60)
+            try ivsVideoConfig.video.setKeyframeInterval(1)
+            try ivsVideoConfig.video.setTargetFramerate(30)
             
         } catch { }
         
