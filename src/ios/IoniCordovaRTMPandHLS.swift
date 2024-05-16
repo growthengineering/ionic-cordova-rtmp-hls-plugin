@@ -5,17 +5,33 @@ import AVFoundation
 import Logboard
 import Combine
 import VideoToolbox
+import AmazonIVSPlayer
+import AmazonIVSBroadcast
 
-@objc(IoniCordovaRTMPandHLS) class IoniCordovaRTMPandHLS: CDVPlugin {
+@objc(IoniCordovaRTMPandHLS) class IoniCordovaRTMPandHLS: CDVPlugin, IVSPlayer.Delegate, IVSBroadcastSession.Delegate  {
+    @objc(broadcastSession:didChangeState:) func broadcastSession(_ session: IVSBroadcastSession, didChange state: IVSBroadcastSession.State) {
+        
+    }
+    
+    @objc func broadcastSession(_ session: IVSBroadcastSession, didEmitError error: Error) {
+        
+    }
+    
     
     var connection: RTMPConnection!
     var stream: RTMPStream!
-    var hkView: MTHKView!
-    var avPlayer: AVPlayer!
-    var avPlayerLayer: AVPlayerLayer!
+    var hkView: IVSImagePreviewView!
+    var avPlayer: IVSPlayer!
+    var avPlayerLayer: IVSPlayerLayer!
     var HLSUrl: String = ""
     var RTMPKey: String = ""
     var isFrontCamera: Bool = true
+    var broadcastSession: IVSBroadcastSession!
+    var currentCamera: IVSImageDevice!
+    var ivsVideoConfig: IVSBroadcastConfiguration!
+    var eventsCallbackCommand: CDVInvokedUrlCommand!
+    
+    var eventsCallbackCommand2: CDVInvokedUrlCommand!
     
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
@@ -33,40 +49,53 @@ import VideoToolbox
             print(error)
         }
         
-        hkView = MTHKView(frame: webView.bounds)
-        hkView.layer.zPosition = 0;
-        webView.layer.zPosition = 1;
-        hkView.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        
-        connection = RTMPConnection()
-        connection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self, useCapture:false)
-        stream = RTMPStream(connection: connection)
-        
-        setVideoSettings();
-        
-        stream.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
-            print("Error attaching audio")
-        }
-        
-        stream.attachCamera(AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: (isFrontCamera ? .front : .back))) { error in
-            print("Error attaching camera")
-        }
-        
-        webView.isOpaque = false
-        webView.backgroundColor = UIColor.clear
-        viewController.view.backgroundColor = UIColor.clear
-        hkView.attachStream(stream)
-        viewController.view.insertSubview(hkView, belowSubview: webView)
+       
+        createBroadcastSession { result in
+            switch result {
+            case .success:
+                self.webView.layer.zPosition = 1;
+                self.webView.isOpaque = false
+                self.webView.backgroundColor = UIColor.clear
+                self.viewController.view.backgroundColor = UIColor.clear
+                
+                
+                self.broadcastSession.awaitDeviceChanges {
+                    do {
+                        if let devicePreview = try self.broadcastSession.listAttachedDevices()
+                           .compactMap({ $0 as? IVSImageDevice })
+                           .first {
+                            self.currentCamera = devicePreview;
+                            var newView: IVSImagePreviewView = try devicePreview.previewView()
+                            
+             
+                            newView.frame = self.webView.frame
+                            newView.bounds = self.webView.bounds
+                            newView.layer.zPosition = 0
+                            self.hkView = newView
+                            self.hkView.backgroundColor  = UIColor.clear
+                            self.viewController.view.insertSubview(self.hkView , belowSubview: self.webView)
 
-        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "previewCamera Executed!")
-        commandDelegate.send(pluginResult, callbackId: command.callbackId)
+                        }
+                    } catch {
+                        print(error)
+                    }
+                 }
+                
+                let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "previewCamera Executed!")
+                self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+
+                
+            case .failure(let error):
+                print("Error initializing broadcast session:", error)
+            }
+        }
+       
+
+      
     }
     
     @objc(closeCameraPreview:)
     func closeCameraPreview(command: CDVInvokedUrlCommand) {
-        stream = nil
-        connection = nil
-        
          let session = AVAudioSession.sharedInstance()
          do {
              try session.setActive(false)
@@ -88,26 +117,33 @@ import VideoToolbox
     
     @objc(swapCamera:)
     func swapCamera(command: CDVInvokedUrlCommand) {
-        guard stream != nil else {
-            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Stream not initialized.")
-            commandDelegate.send(pluginResult, callbackId: command.callbackId)
-            return
-        }
+   
+        let wants: IVSDevicePosition = (currentCamera.descriptor().position == .front) ? .back : .front
+        hkView?.removeFromSuperview()
+        hkView = nil
         
-        isFrontCamera.toggle()
+        let foundCamera = IVSBroadcastSession
+                .listAvailableDevices()
+                .first { $0.type == .camera && $0.position == wants }
         
-        let newCameraPosition: AVCaptureDevice.Position = isFrontCamera ? .front : .back
-
-        guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newCameraPosition) else {
-            let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Failed to get camera.")
-            commandDelegate.send(pluginResult, callbackId: command.callbackId)
-            return
-        }
+        guard let newCamera = foundCamera else { return }
         
-        setVideoSettings();
-
-        stream.attachCamera(newCamera) { error in
-            print("Error attaching camera " , error)
+        broadcastSession.exchangeOldDevice(currentCamera, withNewDevice: newCamera) { newDevice, _ in
+            self.currentCamera = newDevice as! IVSImageDevice
+            if let camera = newDevice as? IVSImageDevice {
+                do {
+                    var newView: IVSImagePreviewView = try camera.previewView()
+                    newView.frame = self.webView.frame
+                    newView.bounds = self.webView.bounds
+                    newView.layer.zPosition = 0
+                    self.hkView = newView
+                    self.hkView.backgroundColor  = UIColor.clear
+                     
+                    try self.viewController.view.insertSubview(self.hkView, belowSubview: self.webView)
+                } catch {
+                    print("Error creating preview view \(error)")
+                }
+            }
         }
         
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "swapCamera Executed!")
@@ -123,20 +159,19 @@ import VideoToolbox
                 return
             }
             
+            guard let RTMPSUrl = URL(string: RTMPSUrl) else {
+                    print("Invalid RTMPS URL")
+                    return
+                }
+            
             guard let _RTMPKey = command.arguments[1] as? String else {
                 let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid Key")
                 commandDelegate.send(pluginResult, callbackId: command.callbackId)
                 return
             }
-            
-            guard connection != nil else {
-               let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Connection Failed")
-               commandDelegate.send(pluginResult, callbackId: command.callbackId)
-               return
-            }
 
             RTMPKey = _RTMPKey
-            connection.connect(RTMPSUrl)
+            try broadcastSession.start(with: RTMPSUrl, streamKey: _RTMPKey)
 
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "startBroadcasting Executed!")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -151,18 +186,11 @@ import VideoToolbox
     func stopBroadcasting(command: CDVInvokedUrlCommand) {
        DispatchQueue.main.async { [weak self] in
            guard let self = self else { return }
-           if let stream = self.stream {
-               stream.close()
-               self.stream = nil
-           }
-
-           if let connection = self.connection {
-               connection.close()
-               self.connection = nil
-           }
-            
-           let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
-           self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
+            hkView?.removeFromSuperview()
+            hkView = nil
+            broadcastSession.stop()
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "stopBroadcasting Executed!")
+            self.commandDelegate.send(pluginResult, callbackId: command.callbackId)
        }
     }
     
@@ -180,15 +208,11 @@ import VideoToolbox
         
         if let url = URL(string: streamURLString) {
             
-            avPlayer = AVPlayer(url: url)
-            avPlayerLayer = AVPlayerLayer(player: avPlayer)
-            avPlayerLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-            avPlayerLayer.frame = viewController.view.bounds
-            avPlayerLayer.zPosition = -1
-            viewController.view.layer.addSublayer(avPlayerLayer)
-            
+
+            HLSUrl = streamURLString
+            setupLivestream()
+            avPlayer.load(url)
             avPlayer.play()
-            
 
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
@@ -197,10 +221,14 @@ import VideoToolbox
     
     @objc(closeLiveStream:)
     func closeLiveStream(command: CDVInvokedUrlCommand) {
-        avPlayer.pause()
+        if let _player = avPlayer {
+            _player.pause()
+        }
         avPlayer = nil
         
-        avPlayerLayer.removeFromSuperlayer()
+        if let _playerLayer = avPlayerLayer {
+            _playerLayer.removeFromSuperlayer()
+        }
         avPlayerLayer = nil
 
         webView.isOpaque = true
@@ -265,7 +293,7 @@ import VideoToolbox
         let cameraPermission = AVCaptureDevice.authorizationStatus(for: .video)
         let audioPermission = AVCaptureDevice.authorizationStatus(for: .audio)
         return cameraPermission == .authorized && audioPermission == .authorized
-    } 
+    }
     
     @objc private func rtmpStatusHandler(notification: Notification) {
         let e = Event.from(notification)
@@ -286,6 +314,19 @@ import VideoToolbox
     }
 
     func setVideoSettings() {
+        do {
+            ivsVideoConfig = IVSBroadcastConfiguration()
+            try ivsVideoConfig.audio.setBitrate(128_000)
+            try ivsVideoConfig.video.setMaxBitrate(8_000_000)
+            try ivsVideoConfig.video.setMinBitrate(2_500_000)
+            try ivsVideoConfig.video.setInitialBitrate(5_000_000)
+            try ivsVideoConfig.video.setSize(CGSize(width: 1080, height: 1920))
+            try ivsVideoConfig.video.setKeyframeInterval(1)
+            try ivsVideoConfig.video.setTargetFramerate(30)
+            
+        } catch { }
+        
+        /*
         stream.frameRate = 60;
         stream.videoOrientation = .portrait;
         stream.videoSettings.videoSize = .init(width: 1080, height: 1920);
@@ -297,5 +338,84 @@ import VideoToolbox
         stream.videoSettings.isHardwareEncoderEnabled = false;
         stream.videoSettings.allowFrameReordering = false;
         stream.audioSettings.bitRate = 96*1000;
+        */
+    }
+
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)  {
+        print("keyPath", keyPath)
+        if keyPath == #keyPath(IVSPlayer.state) {
+            // Now we safely have access to the player's state
+            if( avPlayer == nil) {
+                print("IVSPlayer IS NILL")
+                return
+            }
+            switch avPlayer.state {
+                case .ready:
+                        print("IVSPlayer state is ready")
+                        avPlayer.play()
+                        let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"connected\": true}")
+                        commandDelegate.send(pluginResult, callbackId: eventsCallbackCommand.callbackId)
+                    break
+                case .ended:
+                        print("IVSPlayer state is ended")
+                        let pluginResult2 = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"connected\": false}")
+                        commandDelegate.send(pluginResult2, callbackId: eventsCallbackCommand2.callbackId)
+                    break
+                case .playing:
+                    print("IVSPlayer state is playing")
+                default:
+                    print("IVSPlayer state is UNKNOW")
+                    break
+            }
+        }
+        
+        if keyPath == #keyPath(IVSPlayer.error)  {
+            print("IVSPlayer ERROR TRIGEREDE")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                self.setupLivestream()
+            }
+        }
+    }
+    
+    func createBroadcastSession(completion: @escaping (Result<Void, Error>) -> Void) {
+
+        do {
+                setVideoSettings()
+                broadcastSession = try IVSBroadcastSession(
+                    configuration: ivsVideoConfig,
+                       descriptors: IVSPresets.devices().backCamera(),
+                       delegate: self)
+                    completion(.success(()))
+           } catch {
+                print("Error initializing IVSBroadcastSession: \(error)")
+                completion(.failure((error)))
+           }
+    }
+    
+    func setupLivestream() {
+        avPlayer = IVSPlayer()
+        avPlayerLayer = IVSPlayerLayer(player: avPlayer)
+        avPlayerLayer.videoGravity = .resizeAspectFill
+        avPlayerLayer.frame = viewController.view.bounds
+        avPlayerLayer.zPosition = -1
+        viewController.view.layer.addSublayer(avPlayerLayer)
+        avPlayer.addObserver(self, forKeyPath: #keyPath(IVSPlayer.state), options: [.new], context: nil)
+        avPlayer.addObserver(self, forKeyPath: #keyPath(IVSPlayer.error), options: [.new], context: nil)
+        avPlayer.load(URL(string:HLSUrl))
+    }
+    
+    @objc(onConnectionChange:)
+    func onConnectionChange(command: CDVInvokedUrlCommand) {
+        eventsCallbackCommand = command;
+    }
+    
+    @objc(offConnectionChange:)
+    func offConnectionChange(command: CDVInvokedUrlCommand) {
+        //eventsCallbackCommand = nil;
+        //eventsCallbackCommand2 = nil;
+    }
+    @objc(addConnectiontListenerOffline:)
+    func addConnectiontListenerOffline(command: CDVInvokedUrlCommand) {
+        eventsCallbackCommand2 = command;
     }
 }

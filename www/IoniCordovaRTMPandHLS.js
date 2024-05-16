@@ -1,5 +1,5 @@
 const exec = require('cordova/exec');
-
+ 
 var IoniCordovaRTMPandHLS = {};
 
 IoniCordovaRTMPandHLS.previewCamera = function (CameraOpts, success, error) {
@@ -33,5 +33,17 @@ IoniCordovaRTMPandHLS.closeLiveStream = function (success, error) {
 IoniCordovaRTMPandHLS.requestPermissions = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'requestPermissions', []);
 };
+
+IoniCordovaRTMPandHLS.onConnectionChange = function (success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'onConnectionChange', []);
+};
+
+IoniCordovaRTMPandHLS.offConnectionChange = function (success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'offConnectionChange', []);
+};
+IoniCordovaRTMPandHLS.addConnectiontListenerOffline = function (success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'addConnectiontListenerOffline', []);
+};
+
 
 module.exports = IoniCordovaRTMPandHLS;
