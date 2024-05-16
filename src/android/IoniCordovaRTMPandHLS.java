@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 
 import androidx.core.content.ContextCompat;
@@ -123,6 +124,8 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
         try {
           Context context = cordova.getActivity().getApplicationContext();
 
+          cordova.getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
           createBroadcastSession();
 
           broadcastSession.awaitDeviceChanges(() -> {
@@ -175,6 +178,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             webView.getView().bringToFront();
             webView.getView().setBackgroundColor(Color.WHITE);
             cameraView = null;
+            cordova.getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
           }
           if(callbackContext != null ) {
             callbackContext.success("closeCameraPreview Executed!");
@@ -300,8 +304,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     eventData.put("connected", false);
                     sendConnectionEvent(eventData, "addConnectiontListenerOffline");
                   } catch (Exception e) {
-
-                    Log.d("TESTJL",  "error 1 ended");
                   }
                   break;
               
@@ -313,8 +315,6 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
                     eventData.put("connected", true);
                     sendConnectionEvent(eventData, "onConnectionChange");
                   } catch (Exception e) {
-
-                    Log.d("TESTJL",  "error 1");
                   }
                   break;
               }
@@ -371,7 +371,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
 
           player.load(Uri.parse(HLSUrl));
           webView.getView().setBackgroundColor(Color.TRANSPARENT);
-
+          
+          cordova.getActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+          
           callbackContext.success("viewLiveStream Executed!");
         } catch (Exception ex) {
           callbackContext.error("Failed to viewLiveStream");
@@ -396,6 +398,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
             webView.getView().setBackgroundColor(Color.WHITE);
             playerViewIVS = null;
           }
+          
+          cordova.getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+          
           callbackContext.success("closeLiveStream Executed!");
         }
       }
@@ -458,12 +463,10 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     new BroadcastSession.Listener() {
       @Override
       public void onStateChanged(@NonNull BroadcastSession.State state) {
-        Log.d("D", "State=" + state);
       }
 
       @Override
       public void onError(@NonNull BroadcastException exception) {
-        Log.e("D", "Exception: " + exception);
       }
     };
 
@@ -491,14 +494,10 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
     if(eventsCallbackContext != null && eventName == "onConnectionChange") {
       PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
       result.setKeepCallback(true);
-
-      Log.d("TESTJL",  "sendPluginResult onConnectionChange");
       eventsCallbackContext.sendPluginResult(result);
     }  else if(eventsCallbackContext2 != null && eventName == "addConnectiontListenerOffline") {
       PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
       result.setKeepCallback(true);
-
-      Log.d("TESTJL",  "sendPluginResult addConnectiontListenerOffline");
       eventsCallbackContext2.sendPluginResult(result);
     }
 

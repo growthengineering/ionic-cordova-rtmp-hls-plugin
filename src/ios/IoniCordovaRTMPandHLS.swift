@@ -46,7 +46,6 @@ import AmazonIVSBroadcast
             try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
             try session.setActive(true)
         } catch {
-            print(error)
         }
         
        
@@ -77,7 +76,6 @@ import AmazonIVSBroadcast
 
                         }
                     } catch {
-                        print(error)
                     }
                  }
                 
@@ -100,7 +98,6 @@ import AmazonIVSBroadcast
          do {
              try session.setActive(false)
          } catch {
-             print("Error deactivating audio session")
          }
 
 
@@ -141,7 +138,6 @@ import AmazonIVSBroadcast
                      
                     try self.viewController.view.insertSubview(self.hkView, belowSubview: self.webView)
                 } catch {
-                    print("Error creating preview view \(error)")
                 }
             }
         }
@@ -160,7 +156,6 @@ import AmazonIVSBroadcast
             }
             
             guard let RTMPSUrl = URL(string: RTMPSUrl) else {
-                    print("Invalid RTMPS URL")
                     return
                 }
             
@@ -214,6 +209,8 @@ import AmazonIVSBroadcast
             avPlayer.load(url)
             avPlayer.play()
 
+            UIApplication.shared.isIdleTimerDisabled = true
+
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "viewLiveStream executed")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
         }
@@ -234,7 +231,9 @@ import AmazonIVSBroadcast
         webView.isOpaque = true
         webView.backgroundColor = UIColor.white
         viewController.view.backgroundColor = UIColor.white
-
+        
+        UIApplication.shared.isIdleTimerDisabled = false
+        
         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "closeCameraPreview Executed!")
         commandDelegate.send(pluginResult, callbackId: command.callbackId)
     }
@@ -300,7 +299,7 @@ import AmazonIVSBroadcast
         guard let data: ASObject = e.data as? ASObject, let code: String = data["code"] as? String else {
             return
         }
-        print(code)
+
         switch code {
         case RTMPConnection.Code.connectSuccess.rawValue:
             stream.publish(RTMPKey)
@@ -325,52 +324,32 @@ import AmazonIVSBroadcast
             try ivsVideoConfig.video.setTargetFramerate(30)
             
         } catch { }
-        
-        /*
-        stream.frameRate = 60;
-        stream.videoOrientation = .portrait;
-        stream.videoSettings.videoSize = .init(width: 1080, height: 1920);
-        stream.videoSettings.profileLevel = kVTProfileLevel_H264_High_AutoLevel as String;
-        stream.videoSettings.bitRate = 8500 * 1000;
-        stream.videoSettings.maxKeyFrameIntervalDuration = 2;
-        stream.videoSettings.scalingMode = .trim;
-        stream.videoSettings.bitRateMode = .average;
-        stream.videoSettings.isHardwareEncoderEnabled = false;
-        stream.videoSettings.allowFrameReordering = false;
-        stream.audioSettings.bitRate = 96*1000;
-        */
     }
 
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?)  {
-        print("keyPath", keyPath)
         if keyPath == #keyPath(IVSPlayer.state) {
             // Now we safely have access to the player's state
             if( avPlayer == nil) {
-                print("IVSPlayer IS NILL")
                 return
             }
             switch avPlayer.state {
                 case .ready:
-                        print("IVSPlayer state is ready")
                         avPlayer.play()
                         let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"connected\": true}")
                         commandDelegate.send(pluginResult, callbackId: eventsCallbackCommand.callbackId)
                     break
                 case .ended:
-                        print("IVSPlayer state is ended")
                         let pluginResult2 = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: "{\"connected\": false}")
                         commandDelegate.send(pluginResult2, callbackId: eventsCallbackCommand2.callbackId)
                     break
                 case .playing:
                     print("IVSPlayer state is playing")
                 default:
-                    print("IVSPlayer state is UNKNOW")
                     break
             }
         }
         
         if keyPath == #keyPath(IVSPlayer.error)  {
-            print("IVSPlayer ERROR TRIGEREDE")
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                 self.setupLivestream()
             }
@@ -387,7 +366,6 @@ import AmazonIVSBroadcast
                        delegate: self)
                     completion(.success(()))
            } catch {
-                print("Error initializing IVSBroadcastSession: \(error)")
                 completion(.failure((error)))
            }
     }
