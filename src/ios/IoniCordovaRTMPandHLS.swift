@@ -30,8 +30,8 @@ import AmazonIVSBroadcast
     var currentCamera: IVSImageDevice!
     var ivsVideoConfig: IVSBroadcastConfiguration!
     var eventsCallbackCommand: CDVInvokedUrlCommand!
-    
     var eventsCallbackCommand2: CDVInvokedUrlCommand!
+    var volumeObserver: NSKeyValueObservation?
     
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
@@ -203,7 +203,15 @@ import AmazonIVSBroadcast
         
         if let url = URL(string: streamURLString) {
             
-
+            let audioSession = AVAudioSession.sharedInstance()
+            volumeObserver = audioSession.observe(\.outputVolume, options: [.new]) { [weak self] (session, change) in
+                guard let newVolume = change.newValue else { return }
+ 
+                do {
+                    try AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback)
+                } catch {}
+            }
+        
             HLSUrl = streamURLString
             setupLivestream()
             avPlayer.load(url)
