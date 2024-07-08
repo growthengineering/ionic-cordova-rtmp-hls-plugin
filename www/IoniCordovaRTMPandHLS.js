@@ -34,6 +34,10 @@ IoniCordovaRTMPandHLS.requestPermissions = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'requestPermissions', []);
 };
 
+IoniCordovaRTMPandHLS.hasPermissions = function (success, error) {
+    exec(success, error, 'IoniCordovaRTMPandHLS', 'hasPermissions', []);
+};
+
 IoniCordovaRTMPandHLS.onConnectionChange = function (success, error) {
     exec(success, error, 'IoniCordovaRTMPandHLS', 'onConnectionChange', []);
 };

@@ -112,6 +112,9 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
       case "requestPermissions":
         this.requestPermissions(callbackContext);
         return true;
+      case "hasPermissions":
+        this.hasPermissions(callbackContext);
+        return true;
     }
     return false;
   }
@@ -429,6 +432,24 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
       savedCallbackContext.success("requestPermissions Executed!");
     }
   }
+
+  private void hasPermissions(CallbackContext callbackContext) {
+    String[] permissions = {
+      Manifest.permission.CAMERA,
+      Manifest.permission.RECORD_AUDIO
+    };
+
+    boolean _hasPermissions = true;
+    for (String permission : permissions) {
+      if (ContextCompat.checkSelfPermission(cordova.getActivity(), permission) != PackageManager.PERMISSION_GRANTED) {
+        _hasPermissions = false;
+        break;
+      }
+    }
+    
+    callbackContext.success("false");
+  }
+  
 
   @Override
   public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
