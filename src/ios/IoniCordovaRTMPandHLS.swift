@@ -35,7 +35,7 @@ import AmazonIVSBroadcast
     
     @objc(previewCamera:)
     func previewCamera(command: CDVInvokedUrlCommand) {
-        guard checkPermissions() else {
+        guard hasPermissions(command: nil) else {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Permissions not granted.")
             commandDelegate.send(pluginResult, callbackId: command.callbackId)
             return
@@ -296,10 +296,19 @@ import AmazonIVSBroadcast
         }
     }
 
-    func checkPermissions() -> Bool {
+    @objc(hasPermissions:)
+    func hasPermissions(command: CDVInvokedUrlCommand?) -> Bool {
         let cameraPermission = AVCaptureDevice.authorizationStatus(for: .video)
         let audioPermission = AVCaptureDevice.authorizationStatus(for: .audio)
-        return cameraPermission == .authorized && audioPermission == .authorized
+        let _hasPermissions = cameraPermission == .authorized && audioPermission == .authorized
+        
+        if(command == nil) {
+            return _hasPermissions
+        } else {
+            let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: _hasPermissions)
+            commandDelegate.send(pluginResult, callbackId: command?.callbackId)
+            return _hasPermissions
+        }
     }
     
     @objc private func rtmpStatusHandler(notification: Notification) {
