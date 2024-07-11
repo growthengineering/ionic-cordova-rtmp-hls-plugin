@@ -447,7 +447,7 @@ public class IoniCordovaRTMPandHLS extends CordovaPlugin {
       }
     }
     
-    callbackContext.success("false");
+    callbackContext.success(String.valueOf(_hasPermissions));
   }
   
 
