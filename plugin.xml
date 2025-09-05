@@ -26,8 +26,8 @@
         </config-file>
         <framework src="com.google.android.exoplayer:exoplayer:2.19.1" /> 
         <framework src="com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4" />
-        <framework src="com.amazonaws:ivs-player:1.27.0" />
-        <framework src="com.amazonaws:ivs-broadcast:1.17.0" />
+        <framework src="com.amazonaws:ivs-player:1.40.0" />
+        <framework src="com.amazonaws:ivs-broadcast:1.29.0" />
         <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
     </platform>
 
@@ -40,8 +40,8 @@
           <podspec>
             <pods>
                 <pod name="HaishinKit" spec="~> 1.5.6" />
-                <pod name="AmazonIVSPlayer" spec="~> 1.27.0" />
-                <pod name="AmazonIVSBroadcast" spec="~> 1.17.0" />
+                <pod name="AmazonIVSPlayer" spec="~> 1.40.0" />
+                <pod name="AmazonIVSBroadcast" spec="~> 1.31.0" />
             </pods>
         </podspec>
         <framework src="AVFoundation.framework" weak="true" />
