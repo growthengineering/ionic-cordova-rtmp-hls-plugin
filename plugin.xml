@@ -26,8 +26,8 @@
         </config-file>
         <framework src="com.google.android.exoplayer:exoplayer:2.19.1" /> 
         <framework src="com.github.shogo4405.HaishinKit~kt:haishinkit:0.10.4" />
-        <framework src="com.amazonaws:ivs-player:1.40.0" />
-        <framework src="com.amazonaws:ivs-broadcast:1.29.0" />
+        <framework src="com.amazonaws:ivs-player:1.46.0" />
+        <framework src="com.amazonaws:ivs-broadcast:1.35.0" />
         <framework src="src/android/build-extras.gradle" custom="true" type="gradleReference" />
     </platform>
 
