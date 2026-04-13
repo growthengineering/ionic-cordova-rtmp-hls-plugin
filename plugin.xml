@@ -32,18 +32,12 @@
     </platform>
 
     <platform name="ios">
+        <preference name="SwiftVersion" value="5.0" />
         <config-file parent="/*" target="config.xml">
             <feature name="IoniCordovaRTMPandHLS">
                 <param name="ios-package" value="IoniCordovaRTMPandHLS" />
             </feature>
         </config-file>
-          <podspec>
-            <pods>
-                <pod name="HaishinKit" spec="~> 1.5.6" />
-                <pod name="AmazonIVSPlayer" spec="~> 1.40.0" />
-                <pod name="AmazonIVSBroadcast" spec="~> 1.31.0" />
-            </pods>
-        </podspec>
         <framework src="AVFoundation.framework" weak="true" />
         
         <source-file src="src/ios/IoniCordovaRTMPandHLS.swift" />
