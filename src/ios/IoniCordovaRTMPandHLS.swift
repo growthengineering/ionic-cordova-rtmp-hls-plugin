@@ -301,12 +301,12 @@ import AmazonIVSBroadcast
         let cameraPermission = AVCaptureDevice.authorizationStatus(for: .video)
         let audioPermission = AVCaptureDevice.authorizationStatus(for: .audio)
         let _hasPermissions = cameraPermission == .authorized && audioPermission == .authorized
-        
-        if(command == nil) {
+            
+        if command == nil {
             return _hasPermissions
         } else {
             let pluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: _hasPermissions)
-            commandDelegate.send(pluginResult, callbackId: command?.callbackId)
+            commandDelegate.send(pluginResult, callbackId: command!.callbackId)
             return _hasPermissions
         }
     }
